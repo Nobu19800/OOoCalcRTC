@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dlg:window PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "dialog.dtd">
+<dlg:window xmlns:dlg="http://openoffice.org/2000/dialog" xmlns:script="http://openoffice.org/2000/script" dlg:id="RTCTreeDialog" dlg:left="103" dlg:top="19" dlg:width="263" dlg:height="156" dlg:closeable="true" dlg:moveable="true">
+ <dlg:bulletinboard>
+  <dlg:button dlg:id="CreateButton" dlg:tab-index="1" dlg:left="1" dlg:top="144" dlg:width="56" dlg:height="11" dlg:value="作成"/>
+  <dlg:treecontrol dlg:id="RTCTreeControl" dlg:tab-index="0" dlg:left="1" dlg:top="2" dlg:width="116" dlg:height="123" dlg:selectiontype="single"/>
+  <dlg:textfield dlg:id="TextField1" dlg:tab-index="2" dlg:left="120" dlg:top="2" dlg:width="72" dlg:height="12"/>
+  <dlg:button dlg:id="CreateRTCTreeButton" dlg:tab-index="3" dlg:left="122" dlg:top="118" dlg:width="70" dlg:height="13" dlg:value="ツリー表示"/>
+  <dlg:textfield dlg:id="nameserver" dlg:tab-index="4" dlg:left="123" dlg:top="108" dlg:width="67" dlg:height="10"/>
+  <dlg:text dlg:id="Label1" dlg:tab-index="11" dlg:left="128" dlg:top="98" dlg:width="60" dlg:height="10" dlg:value="ネームサーバーのアドレス"/>
+  <dlg:text dlg:id="Label2" dlg:tab-index="12" dlg:left="149" dlg:top="52" dlg:width="15" dlg:height="8" dlg:value="行番号"/>
+  <dlg:text dlg:id="Label3" dlg:tab-index="13" dlg:left="149" dlg:top="31" dlg:width="15" dlg:height="8" dlg:value="列番号"/>
+  <dlg:text dlg:id="Label4" dlg:tab-index="14" dlg:left="147" dlg:top="74" dlg:width="19" dlg:height="8" dlg:value="シート名"/>
+  <dlg:textfield dlg:id="ColTextField" dlg:tab-index="8" dlg:left="122" dlg:top="39" dlg:width="69" dlg:height="12"/>
+  <dlg:textfield dlg:id="RowTextField" dlg:tab-index="5" dlg:left="122" dlg:top="61" dlg:width="30" dlg:height="12"/>
+  <dlg:textfield dlg:id="InfoTextField" dlg:tab-index="7" dlg:left="120" dlg:top="16" dlg:width="72" dlg:height="12"/>
+  <dlg:combobox dlg:id="SheetComboBox" dlg:tab-index="15" dlg:left="122" dlg:top="84" dlg:width="69" dlg:height="10" dlg:spin="true"/>
+  <dlg:button dlg:id="SetColButton" dlg:tab-index="9" dlg:left="122" dlg:top="132" dlg:width="70" dlg:height="12" dlg:value="列番号初期化"/>
+  <dlg:button dlg:id="SetAllColButton" dlg:tab-index="10" dlg:left="122" dlg:top="144" dlg:width="70" dlg:height="11" dlg:value="全ての列番号を初期化"/>
+  <dlg:button dlg:id="DeleteButton" dlg:tab-index="6" dlg:left="61" dlg:top="144" dlg:width="55" dlg:height="11" dlg:value="削除"/>
+  <dlg:text dlg:id="Label5" dlg:tab-index="16" dlg:left="218" dlg:top="4" dlg:width="15" dlg:height="8" dlg:value="InPort"/>
+  <dlg:combobox dlg:id="AttachComboBox" dlg:tab-index="17" dlg:left="197" dlg:top="44" dlg:width="63" dlg:height="13" dlg:spin="true"/>
+  <dlg:text dlg:id="Label6" dlg:tab-index="18" dlg:left="207" dlg:top="34" dlg:width="45" dlg:height="7" dlg:value="関連付けしたInPort"/>
+  <dlg:button dlg:id="DetachButton" dlg:tab-index="20" dlg:left="198" dlg:top="86" dlg:width="57" dlg:height="12" dlg:value="関連付け解除"/>
+  <dlg:button dlg:id="AttachButton" dlg:tab-index="19" dlg:left="198" dlg:top="66" dlg:width="57" dlg:height="13" dlg:value="関連付け"/>
+  <dlg:checkbox dlg:id="LowCheckBox" dlg:tab-index="21" dlg:left="201" dlg:top="104" dlg:width="52" dlg:height="10" dlg:value="列を移動させるか" dlg:checked="false"/>
+  <dlg:textfield dlg:id="LenTextField" dlg:tab-index="22" dlg:left="156" dlg:top="60" dlg:width="30" dlg:height="12"/>
+  <dlg:combobox dlg:id="PortComboBox" dlg:tab-index="23" dlg:left="2" dlg:top="128" dlg:width="114" dlg:height="10" dlg:spin="true"/>
+  <dlg:combobox dlg:id="InPortComboBox" dlg:tab-index="24" dlg:left="198" dlg:top="16" dlg:width="60" dlg:height="12" dlg:spin="true"/>
+ </dlg:bulletinboard>
+</dlg:window>
