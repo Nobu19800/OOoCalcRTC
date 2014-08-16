@@ -1,10 +1,15 @@
-# -*- coding: cp932 -*-
+# -*- coding: utf-8 -*-
 
 import optparse
 import sys,os,platform
 import re
 
-sys.path += ["C:\\Program Files\\OpenOffice.org 3\\program\\CalcIDL", 'C:\\Python26\\lib\\site-packages', 'C:\\Python26\\lib\\site-packages\\rtctree\\rtmidl']
+
+if os.name == 'posix':
+    sys.path += ['/usr/lib/openoffice/basis-link/program/CalcIDL', '/usr/lib/python2.6/dist-packages', '/usr/lib/python2.6/dist-packages/rtctree/rtmidl']
+elif os.name == 'nt':
+    sys.path += ['C:\\Program Files\\OpenOffice.org 3\\program\\CalcIDL', 'C:\\Python26\\lib\\site-packages', 'C:\\Python26\\lib\\site-packages\\rtctree\\rtmidl']
+
 
 
 import time
@@ -79,7 +84,7 @@ class m_ControlName:
 ooocalccontrol_spec = ["implementation_id", imp_id,
                   "type_name",         imp_id,
                   "description",       "Openoffice Calc Component",
-                  "version",           "0.1",
+                  "version",           "0.1.1",
                   "vendor",            "Miyamoto Nobuhiko",
                   "category",          "example",
                   "activity_type",     "DataFlowComponent",
@@ -168,7 +173,7 @@ class mDataBase_i (DataBase__POA.mDataBase):
 
 
 ##
-# OpenOffice Calc‚ğ‘€ì‚·‚é‚½‚ß‚ÌRTC‚ÌƒNƒ‰ƒX
+# OpenOffice Calcã‚’æ“ä½œã™ã‚‹ãŸã‚ã®RTCã®ã‚¯ãƒ©ã‚¹
 ##
 
 class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
@@ -189,7 +194,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     
     return
   ##
-  # ÀsüŠú‚ğİ’è‚·‚éŠÖ”
+  # å®Ÿè¡Œå‘¨æœŸã‚’è¨­å®šã™ã‚‹é–¢æ•°
   ##
 
   def m_setRate(self, rate):
@@ -197,7 +202,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       m_ec[0].set_rate(rate)
 
   ##
-  # Šˆ«‰»‚·‚é‚½‚ß‚ÌŠÖ”
+  # æ´»æ€§åŒ–ã™ã‚‹ãŸã‚ã®é–¢æ•°
   ##    
 
   def m_activate(self):
@@ -205,7 +210,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       m_ec[0].activate_component(self._objref)
 
   ##
-  # •sŠˆ«‰»‚·‚é‚½‚ß‚ÌŠÖ”
+  # ä¸æ´»æ€§åŒ–ã™ã‚‹ãŸã‚ã®é–¢æ•°
   ##
 
   def m_deactivate(self):
@@ -213,11 +218,11 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       m_ec[0].deactivate_component(self._objref)
 
   ##
-  # ƒAƒEƒgƒ|[ƒg’Ç‰Á‚ÌŠÖ”
-  # nameFƒAƒEƒgƒ|[ƒg‚Ì–¼‘O
-  # m_inportFÚ‘±‚·‚éƒCƒ“ƒ|[ƒg
-  # rowFƒf[ƒ^‚ğ‘‚«‚Şs”Ô†
-  # snGÚ‘±‚·‚éƒCƒ“ƒ|[ƒg‚ÌƒpƒX
+  # ã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆè¿½åŠ ã®é–¢æ•°
+  # nameï¼šã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆã®åå‰
+  # m_inportï¼šæ¥ç¶šã™ã‚‹ã‚¤ãƒ³ãƒãƒ¼ãƒˆ
+  # rowï¼šãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€è¡Œç•ªå·
+  # snï¼›æ¥ç¶šã™ã‚‹ã‚¤ãƒ³ãƒãƒ¼ãƒˆã®ãƒ‘ã‚¹
   ##
   def m_addOutPort(self, name, m_inport, row, col, mlen, sn, mstate, t_attachports):
 
@@ -259,11 +264,11 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             
         
   ##
-  # ƒCƒ“ƒ|[ƒg’Ç‰Á‚ÌŠÖ”
-  # nameFƒCƒ“ƒ|[ƒg‚Ì–¼‘O
-  # m_inportFÚ‘±‚·‚éƒAƒEƒgƒ|[ƒg
-  # rowFƒf[ƒ^‚ğ‘‚«‚Şs”Ô†
-  # snG‘‚«‚ŞƒV[ƒg
+  # ã‚¤ãƒ³ãƒãƒ¼ãƒˆè¿½åŠ ã®é–¢æ•°
+  # nameï¼šã‚¤ãƒ³ãƒãƒ¼ãƒˆã®åå‰
+  # m_inportï¼šæ¥ç¶šã™ã‚‹ã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆ
+  # rowï¼šãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€è¡Œç•ªå·
+  # snï¼›æ›¸ãè¾¼ã‚€ã‚·ãƒ¼ãƒˆ
   ##
         
   def m_addInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
@@ -304,8 +309,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
                 cell.getCellByPosition(0, 0).String = str(m_outport[0])
 
   ##
-  # ƒAƒEƒgƒ|[ƒgíœ‚ÌŠÖ”
-  # outportFíœ‚·‚éƒAƒEƒgƒ|[ƒg
+  # ã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆå‰Šé™¤ã®é–¢æ•°
+  # outportï¼šå‰Šé™¤ã™ã‚‹ã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆ
   ##
   
   def m_removeOutComp(self, outport):
@@ -314,8 +319,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       del self._OutPorts[outport._name]
 
   ##
-  # ƒCƒ“ƒ|[ƒgíœ‚ÌŠÖ”
-  # outportFíœ‚·‚éƒCƒ“ƒ|[ƒg
+  # ã‚¤ãƒ³ãƒãƒ¼ãƒˆå‰Šé™¤ã®é–¢æ•°
+  # outportï¼šå‰Šé™¤ã™ã‚‹ã‚¤ãƒ³ãƒãƒ¼ãƒˆ
   ##
 
   def m_removeInComp(self, inport):
@@ -324,7 +329,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       del self._InPorts[inport._name]
 
   ##
-  # ‰Šú‰»ˆ——pƒR[ƒ‹ƒoƒbƒNŠÖ”
+  # åˆæœŸåŒ–å‡¦ç†ç”¨ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
   ##
   
   def onInitialize(self):
@@ -338,7 +343,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   
   ##
-  # ”ñŠˆ«‰»ˆ——pƒR[ƒ‹ƒoƒbƒNŠÖ”
+  # éæ´»æ€§åŒ–å‡¦ç†ç”¨ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
   ##
   
   def onDeactivated(self, ec_id):
@@ -365,7 +370,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
   ##
-  # üŠúˆ——pƒR[ƒ‹ƒoƒbƒNŠÖ”
+  # å‘¨æœŸå‡¦ç†ç”¨ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
   ##
   
   def onExecute(self, ec_id):
@@ -413,7 +418,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     
   ##
-  # I—¹ˆ——pƒR[ƒ‹ƒoƒbƒNŠÖ”
+  # çµ‚äº†å‡¦ç†ç”¨ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
   ##
   def on_shutdown(self, ec_id):
       OOoRTC.calc_comp = None
@@ -421,7 +426,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
 ##
-# ’Ç‰Á‚·‚éƒ|[ƒg‚ÌƒNƒ‰ƒX
+# è¿½åŠ ã™ã‚‹ãƒãƒ¼ãƒˆã®ã‚¯ãƒ©ã‚¹
 ##
 
 
@@ -654,7 +659,7 @@ class MyOutPortSeq(MyPortObject):
 
         
 ##
-# ƒf[ƒ^‚Ìƒ^ƒCƒv
+# ãƒ‡ãƒ¼ã‚¿ã®ã‚¿ã‚¤ãƒ—
 ##
 
 class m_DataType:
@@ -667,7 +672,7 @@ class m_DataType:
         pass
 
 ##
-# ƒf[ƒ^Œ^‚ğ•Ô‚·ŠÖ”
+# ãƒ‡ãƒ¼ã‚¿å‹ã‚’è¿”ã™é–¢æ•°
 ##
         
 def GetDataType(m_port):
@@ -792,7 +797,7 @@ def GetDataType(m_port):
 
 
 ##
-# ƒRƒ“ƒ|[ƒlƒ“ƒg‚ğŠˆ«‰»‚µ‚ÄCalc‚Ì‘€ì‚ğŠJn‚·‚éŠÖ”
+# ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’æ´»æ€§åŒ–ã—ã¦Calcã®æ“ä½œã‚’é–‹å§‹ã™ã‚‹é–¢æ•°
 ##
 
 def Start():
@@ -800,13 +805,13 @@ def Start():
         OOoRTC.calc_comp.m_activate()
 
 ##
-# ƒRƒ“ƒ|[ƒlƒ“ƒg‚ğ•sŠˆ«‰»‚µ‚ÄCalc‚Ì‘€ì‚ğI—¹‚·‚éŠÖ”
+# ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’ä¸æ´»æ€§åŒ–ã—ã¦Calcã®æ“ä½œã‚’çµ‚äº†ã™ã‚‹é–¢æ•°
 ##
 def Stop():
     if OOoRTC.calc_comp:
         OOoRTC.calc_comp.m_deactivate()
 ##
-# ƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌÀsüŠú‚ğİ’è‚·‚éŠÖ”
+# ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®å®Ÿè¡Œå‘¨æœŸã‚’è¨­å®šã™ã‚‹é–¢æ•°
 ##
 
 def Set_Rate():
@@ -841,7 +846,7 @@ def Set_Rate():
       
       
 ##
-# ƒf[ƒ^‚ª‘‚«‚Ü‚ê‚½‚Æ‚«‚ÉŒÄ‚Ño‚³‚ê‚éƒR[ƒ‹ƒoƒbƒNŠÖ”
+# ãƒ‡ãƒ¼ã‚¿ãŒæ›¸ãè¾¼ã¾ã‚ŒãŸã¨ãã«å‘¼ã³å‡ºã•ã‚Œã‚‹ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
 ##
 
 
@@ -863,7 +868,7 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
 
 
 ##
-#RTC‚ğƒ}ƒl[ƒWƒƒ‚É“o˜^‚·‚éŠÖ”
+#RTCã‚’ãƒãƒãƒ¼ã‚¸ãƒ£ã«ç™»éŒ²ã™ã‚‹é–¢æ•°
 ##
 def OOoCalcControlInit(manager):
   profile = OpenRTM_aist.Properties(defaults_str=ooocalccontrol_spec)
@@ -885,7 +890,7 @@ def MyModuleInit(manager):
 
 
 ##
-# ƒAƒEƒgƒ|[ƒg‚ğ’Ç‰Á‚·‚éŠÖ”
+# ã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆã‚’è¿½åŠ ã™ã‚‹é–¢æ•°
 ##
 def CompAddOutPort(name, i_port, dlg_control):
     if OOoRTC.calc_comp != None:
@@ -912,7 +917,7 @@ def CompAddOutPort(name, i_port, dlg_control):
         
 
 ##
-# ƒCƒ“ƒ|[ƒg‚ğ’Ç‰Á‚·‚éŠÖ”
+# ã‚¤ãƒ³ãƒãƒ¼ãƒˆã‚’è¿½åŠ ã™ã‚‹é–¢æ•°
 ##
 
 def CompAddInPort(name, o_port, dlg_control):
@@ -934,7 +939,7 @@ def CompAddInPort(name, o_port, dlg_control):
         OOoRTC.calc_comp.m_addInPort(name, o_port, row, col, mlen, sn, mst, {})
 
 ##
-# RTC‹N“®‚ÌŠÖ”
+# RTCèµ·å‹•ã®é–¢æ•°
 ##
 
 def createOOoCalcComp():
@@ -954,7 +959,7 @@ def createOOoCalcComp():
 
     
     
-    sheetname = '•Û‘¶—p'
+    sheetname = 'ä¿å­˜ç”¨'
     if calc.sheets.hasByName(sheetname):
         pass
     else:
@@ -962,10 +967,10 @@ def createOOoCalcComp():
             cnt = calc.sheets.Count
             calc.sheets.insertNewByName(sheetname, cnt)
         except unohelper.RuntimeException:
-            calc.run_errordialog(title='ƒGƒ‰[', message='')
+            calc.run_errordialog(title='ã‚¨ãƒ©ãƒ¼', message='')
             return
         
-    MyMsgBox('',u'RTC‚ğ‹N“®‚µ‚Ü‚µ‚½')
+    MyMsgBox('',u'RTCã‚’èµ·å‹•ã—ã¾ã—ãŸ')
 
     
     
@@ -976,7 +981,7 @@ def createOOoCalcComp():
     return None
 
 ##
-# ƒ|[ƒg‚ğÚ‘±‚·‚éŠÖ”
+# ãƒãƒ¼ãƒˆã‚’æ¥ç¶šã™ã‚‹é–¢æ•°
 ##
 
 def m_addport(obj1, obj2, c_name):
@@ -1005,9 +1010,9 @@ def m_addport(obj1, obj2, c_name):
 
 
 ##
-# ƒƒbƒZ[ƒWƒ{ƒbƒNƒX•\¦‚ÌŠÖ”
-# titleFƒEƒCƒ“ƒhƒE‚Ìƒ^ƒCƒgƒ‹
-# messageF•\¦‚·‚é•¶Í
+# ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒœãƒƒã‚¯ã‚¹è¡¨ç¤ºã®é–¢æ•°
+# titleï¼šã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã®ã‚¿ã‚¤ãƒˆãƒ«
+# messageï¼šè¡¨ç¤ºã™ã‚‹æ–‡ç« 
 ##
 
 def MyMsgBox(title, message):
@@ -1019,7 +1024,7 @@ def MyMsgBox(title, message):
 
 
 ##
-# OpenOffice‚ğ‘€ì‚·‚é‚½‚ß‚ÌƒNƒ‰ƒX
+# OpenOfficeã‚’æ“ä½œã™ã‚‹ãŸã‚ã®ã‚¯ãƒ©ã‚¹
 ##
 
 class Bridge(object):
@@ -1035,21 +1040,21 @@ class Bridge(object):
     msgbox.dispose()
 
 ##
-# ƒl[ƒ~ƒ“ƒOƒT[ƒrƒX‚ÖÚ‘±‚·‚éŠÖ”
+# ãƒãƒ¼ãƒŸãƒ³ã‚°ã‚µãƒ¼ãƒ“ã‚¹ã¸æ¥ç¶šã™ã‚‹é–¢æ•°
 ##
 def SetNamingServer(s_name, orb):
     
     try:
         namingserver = CorbaNaming(orb, s_name)
     except:
-        MyMsgBox('ƒGƒ‰[',u'ƒl[ƒ~ƒ“ƒOƒT[ƒrƒX‚Ö‚ÌÚ‘±‚É¸”s‚µ‚Ü‚µ‚½')
+        MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ãƒãƒ¼ãƒŸãƒ³ã‚°ã‚µãƒ¼ãƒ“ã‚¹ã¸ã®æ¥ç¶šã«å¤±æ•—ã—ã¾ã—ãŸ')
         return None
     return namingserver
 
 ##
-# ƒcƒŠ[‚Å‘I‘ğ‚µ‚½ƒAƒCƒeƒ€‚ªƒ|[ƒg‚©‚Ç‚¤‚©”»’è‚·‚éŠÖ”
-# objectTreeFƒ_ƒCƒAƒƒO‚ÌƒcƒŠ[
-# _pathFƒ|[ƒg‚ÌƒpƒX‚ÌƒŠƒXƒg
+# ãƒ„ãƒªãƒ¼ã§é¸æŠã—ãŸã‚¢ã‚¤ãƒ†ãƒ ãŒãƒãƒ¼ãƒˆã‹ã©ã†ã‹åˆ¤å®šã™ã‚‹é–¢æ•°
+# objectTreeï¼šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®ãƒ„ãƒªãƒ¼
+# _pathï¼šãƒãƒ¼ãƒˆã®ãƒ‘ã‚¹ã®ãƒªã‚¹ãƒˆ
 ##
 
 def JudgePort(objectTree, _paths):
@@ -1093,7 +1098,7 @@ def JudgePort(objectTree, _paths):
 
 
 ##
-# ŠeRTC‚ÌƒpƒX‚ğæ“¾‚·‚éŠÖ”
+# å„RTCã®ãƒ‘ã‚¹ã‚’å–å¾—ã™ã‚‹é–¢æ•°
 ##
 def ListRecursive(context, rtclist, name, oParent, oTreeDataModel):
     
@@ -1180,7 +1185,7 @@ def rtc_get_rtclist(naming, rtclist, name, oParent, oTreeDataModel):
 
                        
 ##
-# ƒ|[ƒg‚ÌƒpƒX‚ÌƒŠƒXƒg‚ğæ“¾‚·‚éŠÖ”
+# ãƒãƒ¼ãƒˆã®ãƒ‘ã‚¹ã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹é–¢æ•°
 ##
 def getPathList(name):
     if OOoRTC.mgr != None:
@@ -1194,7 +1199,7 @@ def getPathList(name):
     return None
 
 ##
-# ƒ_ƒCƒAƒƒO‚ÌƒcƒŠ[‚Éƒl[ƒ~ƒ“ƒOƒT[ƒo[‚ÌƒIƒuƒWƒFƒNƒg‚ğ“o˜^‚·‚éŠÖ”
+# ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®ãƒ„ãƒªãƒ¼ã«ãƒãƒ¼ãƒŸãƒ³ã‚°ã‚µãƒ¼ãƒãƒ¼ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ç™»éŒ²ã™ã‚‹é–¢æ•°
 ##
 
 def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
@@ -1265,14 +1270,14 @@ def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
 
 
 ##
-# OpenOffice Calc‚ğ‘€ì‚·‚é‚½‚ß‚ÌƒNƒ‰ƒX
+# OpenOffice Calcã‚’æ“ä½œã™ã‚‹ãŸã‚ã®ã‚¯ãƒ©ã‚¹
 ##
 
 class OOoCalc(Bridge):
   def __init__(self):
     Bridge.__init__(self)
     if not self._document.supportsService('com.sun.star.sheet.SpreadsheetDocument'):
-      self.run_errordialog(title='ƒGƒ‰[', message='‚±‚Ìƒ}ƒNƒ‚ÍOpenOffice.org Calc‚Ì’†‚ÅÀs‚µ‚Ä‚­‚¾‚³‚¢')
+      self.run_errordialog(title='ã‚¨ãƒ©ãƒ¼', message='ã“ã®ãƒã‚¯ãƒ­ã¯OpenOffice.org Calcã®ä¸­ã§å®Ÿè¡Œã—ã¦ãã ã•ã„')
       raise NotOOoCalcException()
     self.__current_controller = self._document.CurrentController
     self.__sheets = self._document.Sheets
@@ -1289,8 +1294,8 @@ class OOoCalc(Bridge):
 
 
 ##
-# Cell‚ÌF‚Ì’l‚ğ•Ô‚·ƒNƒ‰ƒX
-# redAgreenAblueFŠeF(0`255)
+# Cellã®è‰²ã®å€¤ã‚’è¿”ã™ã‚¯ãƒ©ã‚¹
+# redã€greenã€blueï¼šå„è‰²(0ï½255)
 ##
 
 def RGB (red, green, blue):
@@ -1312,7 +1317,7 @@ def RGB (red, green, blue):
 
 
 ##
-# “Ç‚İ‚ñ‚¾•Û‘¶—pƒV[ƒg‚©‚çƒ|[ƒg‚ğì¬‚·‚éŠÖ”
+# èª­ã¿è¾¼ã‚“ã ä¿å­˜ç”¨ã‚·ãƒ¼ãƒˆã‹ã‚‰ãƒãƒ¼ãƒˆã‚’ä½œæˆã™ã‚‹é–¢æ•°
 ##
 
 def LoadSheet():
@@ -1322,7 +1327,7 @@ def LoadSheet():
           calc = OOoCalc()
         except NotOOoCalcException:
           return
-        sheetname = '•Û‘¶—p'
+        sheetname = 'ä¿å­˜ç”¨'
         if calc.sheets.hasByName(sheetname):
             sheet = calc.sheets.getByName(sheetname)
             count = 1
@@ -1408,7 +1413,7 @@ def LoadSheet():
 
 
 ##
-# ì¬‚µ‚½ƒ|[ƒg‚Ìİ’è‚ğ•Û‘¶‚·‚éŠÖ”
+# ä½œæˆã—ãŸãƒãƒ¼ãƒˆã®è¨­å®šã‚’ä¿å­˜ã™ã‚‹é–¢æ•°
 ##
                 
 
@@ -1419,7 +1424,7 @@ def UpdateSaveSheet():
           calc = OOoCalc()
         except NotOOoCalcException:
           return
-        sheetname = '•Û‘¶—p'
+        sheetname = 'ä¿å­˜ç”¨'
         if calc.sheets.hasByName(sheetname):
             sheet = calc.sheets.getByName(sheetname)
             for i in range(1, 30):
@@ -1550,7 +1555,7 @@ def UpdateSaveSheet():
             return
 
 ##
-# ƒcƒŠ[‚Ì‘I‘ğˆÊ’u‚ª•Ï‚í‚Á‚½‚Æ‚«‚ÉŠeƒeƒLƒXƒgƒ{ƒbƒNƒX‚Ì“à—e‚ğ•ÏX‚·‚éŠÖ”
+# ãƒ„ãƒªãƒ¼ã®é¸æŠä½ç½®ãŒå¤‰ã‚ã£ãŸã¨ãã«å„ãƒ†ã‚­ã‚¹ãƒˆãƒœãƒƒã‚¯ã‚¹ã®å†…å®¹ã‚’å¤‰æ›´ã™ã‚‹é–¢æ•°
 ##
 
 def UpdateTree(dlg_control, m_port):
@@ -1566,7 +1571,7 @@ def UpdateTree(dlg_control, m_port):
     
 
     ffcol_control = dlg_control.getControl( m_ControlName.InfoTName )
-    ffcol_control.setText(u'ì¬Ï‚İ')
+    ffcol_control.setText(u'ä½œæˆæ¸ˆã¿')
 
     cfcol_control = dlg_control.getControl( m_ControlName.ColTName )
     cfcol_control.setText(str(m_port._col))
@@ -1582,7 +1587,7 @@ def UpdateTree(dlg_control, m_port):
     UpdateAttachPort(dlg_control, m_port)
 
 ##
-#ƒf[ƒ^ƒ|[ƒg‚ÌƒŠƒXƒg‚ğXV‚·‚éŠÖ”
+#ãƒ‡ãƒ¼ã‚¿ãƒãƒ¼ãƒˆã®ãƒªã‚¹ãƒˆã‚’æ›´æ–°ã™ã‚‹é–¢æ•°
 ##
 
 def UpdateDataPortList(dlg_control):
@@ -1600,7 +1605,7 @@ def UpdateDataPortList(dlg_control):
 
             
 ##
-# ƒCƒ“ƒ|[ƒg‚ÌƒŠƒXƒg‚ğXV‚·‚éŠÖ”
+# ã‚¤ãƒ³ãƒãƒ¼ãƒˆã®ãƒªã‚¹ãƒˆã‚’æ›´æ–°ã™ã‚‹é–¢æ•°
 ##
 def UpdateInPortList(dlg_control):
     
@@ -1621,7 +1626,7 @@ def UpdateInPortList(dlg_control):
 
 
 ##
-# ŠÖ˜A•t‚¯‚µ‚½ƒ|[ƒg‚ÌƒŠƒXƒg‚ğXV‚·‚éŠÖ”
+# é–¢é€£ä»˜ã‘ã—ãŸãƒãƒ¼ãƒˆã®ãƒªã‚¹ãƒˆã‚’æ›´æ–°ã™ã‚‹é–¢æ•°
 ##
 def UpdateAttachPort(dlg_control, m_port):
     
@@ -1636,12 +1641,12 @@ def UpdateAttachPort(dlg_control, m_port):
     
 
 ##
-# ƒ|[ƒg‚ğíœ‚µ‚½‚Æ‚«‚ÉŠeƒeƒLƒXƒgƒ{ƒbƒNƒX‚ğ•ÏX‚·‚éŠÖ”
+# ãƒãƒ¼ãƒˆã‚’å‰Šé™¤ã—ãŸã¨ãã«å„ãƒ†ã‚­ã‚¹ãƒˆãƒœãƒƒã‚¯ã‚¹ã‚’å¤‰æ›´ã™ã‚‹é–¢æ•°
 ##
 def ClearInfo(dlg_control):
     
     ffcol_control = dlg_control.getControl( m_ControlName.InfoTName )
-    ffcol_control.setText(u'–¢ì¬')
+    ffcol_control.setText(u'æœªä½œæˆ')
 
     cfcol_control = dlg_control.getControl( m_ControlName.ColTName )
     cfcol_control.setText("2")
@@ -1652,7 +1657,7 @@ def ClearInfo(dlg_control):
 
 
 ##
-# ƒf[ƒ^ƒ|[ƒgƒŠƒXƒg‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒ‡ãƒ¼ã‚¿ãƒãƒ¼ãƒˆãƒªã‚¹ãƒˆã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 class PortListListener(unohelper.Base, XTextListener):
     def __init__(self, dlg_control):
@@ -1671,7 +1676,7 @@ class PortListListener(unohelper.Base, XTextListener):
         
 
 ##
-# ƒ|[ƒgŠÖ˜A•t‚¯‚ÌŠÖ”
+# ãƒãƒ¼ãƒˆé–¢é€£ä»˜ã‘ã®é–¢æ•°
 ##
 def AttachTC(dlg_control, m_port):
     
@@ -1686,17 +1691,17 @@ def AttachTC(dlg_control, m_port):
         UpdateSaveSheet()
         UpdateAttachPort(dlg_control, m_port)
 
-        MyMsgBox('',m_port._name+"‚Æ"+iname+"‚ğŠÖ˜A•t‚¯‚µ‚Ü‚µ‚½")
+        MyMsgBox('',m_port._name+"ã¨"+iname+"ã‚’é–¢é€£ä»˜ã‘ã—ã¾ã—ãŸ")
 
         tfcol_control.Text = iname
                     
     else:
-        MyMsgBox('ƒGƒ‰[',u'ƒCƒ“ƒ|[ƒg‚Ì–¼‘O‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñ')
+        MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ã‚¤ãƒ³ãƒãƒ¼ãƒˆã®åå‰ãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“')
         return
         
 
 ##
-# ƒ|[ƒgŠÖ˜A•t‚¯ƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒãƒ¼ãƒˆé–¢é€£ä»˜ã‘ãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 class AttachListener( unohelper.Base, XActionListener):
     def __init__(self, dlg_control, _paths):
@@ -1731,15 +1736,15 @@ class AttachListener( unohelper.Base, XActionListener):
                     
             
         else:
-            MyMsgBox('ƒGƒ‰[',u'ƒAƒEƒgƒ|[ƒg‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢')
+            MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆã‚’é¸æŠã—ã¦ãã ã•ã„')
             return
         
-        MyMsgBox('ƒGƒ‰[',u'íœÏ‚İ‚Å‚·')
+        MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'å‰Šé™¤æ¸ˆã¿ã§ã™')
 
 
 
 ##
-# ƒ|[ƒgŠÖ˜A•t‚¯‚ÌŠÖ”
+# ãƒãƒ¼ãƒˆé–¢é€£ä»˜ã‘ã®é–¢æ•°
 ##
 def DetachTC(dlg_control, m_port):
     tfcol_control = dlg_control.getControl( m_ControlName.AttachCBName )
@@ -1752,15 +1757,15 @@ def DetachTC(dlg_control, m_port):
             UpdateSaveSheet()  
             UpdateAttachPort(dlg_control, m_port)
 
-            MyMsgBox('',m_port._name+"‚Æ"+iname+"‚ÌŠÖ˜A•t‚¯‚ğ‰ğœ‚µ‚Ü‚µ‚½")
+            MyMsgBox('',m_port._name+"ã¨"+iname+"ã®é–¢é€£ä»˜ã‘ã‚’è§£é™¤ã—ã¾ã—ãŸ")
 
                         
         else:
-            MyMsgBox('ƒGƒ‰[',u'ƒCƒ“ƒ|[ƒg‚Ì–¼‘O‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñ')
+            MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ã‚¤ãƒ³ãƒãƒ¼ãƒˆã®åå‰ãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“')
                     
 
 ##
-# ƒ|[ƒgŠÖ˜A•t‚¯‰ğœƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒãƒ¼ãƒˆé–¢é€£ä»˜ã‘è§£é™¤ãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 class DetachListener( unohelper.Base, XActionListener):
     def __init__(self, dlg_control, _paths):
@@ -1791,13 +1796,13 @@ class DetachListener( unohelper.Base, XActionListener):
                     
             
         else:
-            MyMsgBox('ƒGƒ‰[',u'ƒAƒEƒgƒ|[ƒg‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢')
+            MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ã‚¢ã‚¦ãƒˆãƒãƒ¼ãƒˆã‚’é¸æŠã—ã¦ãã ã•ã„')
             return
         
-        MyMsgBox('ƒGƒ‰[',u'íœÏ‚İ‚Å‚·')
+        MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'å‰Šé™¤æ¸ˆã¿ã§ã™')
 
 ##
-# ƒ|[ƒg‚Ìƒpƒ‰ƒ[ƒ^‚ğİ’è‚·‚éŠÖ”
+# ãƒãƒ¼ãƒˆã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¨­å®šã™ã‚‹é–¢æ•°
 ##
 
 def SetPortParam(m_port, dlg_control):
@@ -1819,7 +1824,7 @@ def SetPortParam(m_port, dlg_control):
     UpdateSaveSheet()
 
 ##
-# ƒ|[ƒgì¬ƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒãƒ¼ãƒˆä½œæˆãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 class CreatePortListener( unohelper.Base, XActionListener):
     def __init__(self, dlg_control, _paths):
@@ -1878,22 +1883,22 @@ class CreatePortListener( unohelper.Base, XActionListener):
             elif props['port.port_type'] == 'DataOutPort':
                 CompAddInPort(F_Name, t_comp, self.dlg_control)
 
-            MyMsgBox('',t_comp[0][-2]+"‚Ì"+t_comp[0][-1]+"‚Æ’ÊM‚·‚éƒf[ƒ^ƒ|[ƒg‚ğì¬‚µ‚Ü‚µ‚½B")
+            MyMsgBox('',t_comp[0][-2]+"ã®"+t_comp[0][-1]+"ã¨é€šä¿¡ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ãƒãƒ¼ãƒˆã‚’ä½œæˆã—ã¾ã—ãŸã€‚")
             
             UpdateSaveSheet()
             
             
-            ffcol_control.setText(u'ì¬Ï‚İ')
+            ffcol_control.setText(u'ä½œæˆæ¸ˆã¿')
             UpdateInPortList(self.dlg_control)
             UpdateDataPortList(self.dlg_control)
 
             #cfcol_control = self.dlg_control.getControl( m_ControlName.ColTName )
             #cfcol_control.setText(str(2))
         else:
-            MyMsgBox('ƒGƒ‰[',u'ƒf[ƒ^ƒ|[ƒg‚Å‚Í‚ ‚è‚Ü‚¹‚ñ')
+            MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ãƒ‡ãƒ¼ã‚¿ãƒãƒ¼ãƒˆã§ã¯ã‚ã‚Šã¾ã›ã‚“')
         
 ##
-# ƒcƒŠ[ì¬ƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒ„ãƒªãƒ¼ä½œæˆãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 
 class SetRTCTreeListener( unohelper.Base, XActionListener ):
@@ -1911,7 +1916,7 @@ class SetRTCTreeListener( unohelper.Base, XActionListener ):
 
 
 ##
-# ƒcƒŠ[‚Ìƒ}ƒEƒX‚Å‚Ì‘€ì‚É‘Î‚·‚éƒR[ƒ‹ƒoƒbƒN
+# ãƒ„ãƒªãƒ¼ã®ãƒã‚¦ã‚¹ã§ã®æ“ä½œã«å¯¾ã™ã‚‹ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 
 class MySelectListener( unohelper.Base, XSelectionChangeListener):
@@ -1940,22 +1945,22 @@ class MySelectListener( unohelper.Base, XSelectionChangeListener):
             return
 
         ffcol_control = self.dlg_control.getControl( m_ControlName.InfoTName )
-        ffcol_control.setText(u'–¢ì¬')
+        ffcol_control.setText(u'æœªä½œæˆ')
 
 
 ##
-# ƒ|[ƒg‚Ìíœ‚ÌŠÖ”
+# ãƒãƒ¼ãƒˆã®å‰Šé™¤ã®é–¢æ•°
 ##
 def DelPortTC(m_port, dlg_control):
     ClearInfo(dlg_control)
-    MyMsgBox('',u'íœ‚µ‚Ü‚µ‚½')
+    MyMsgBox('',u'å‰Šé™¤ã—ã¾ã—ãŸ')
     UpdateSaveSheet()
 
     ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
     ptlist_control.Text = ""
 
 ##
-# ƒ|[ƒgíœƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒãƒ¼ãƒˆå‰Šé™¤ãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
             
 class DeleteListener( unohelper.Base, XActionListener ):
@@ -1996,13 +2001,13 @@ class DeleteListener( unohelper.Base, XActionListener ):
            
             
         else:
-            MyMsgBox('ƒGƒ‰[',u'ƒf[ƒ^ƒ|[ƒg‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢')
+            MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ãƒ‡ãƒ¼ã‚¿ãƒãƒ¼ãƒˆã‚’é¸æŠã—ã¦ãã ã•ã„')
             return
         
-        MyMsgBox('ƒGƒ‰[',u'íœÏ‚İ‚Å‚·')
+        MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'å‰Šé™¤æ¸ˆã¿ã§ã™')
 
 ##
-# ƒf[ƒ^‚ğ‘‚«‚Ş—ñ‚Ì‰Šú‰»ƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€åˆ—ã®åˆæœŸåŒ–ãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 
 class SetColListener( unohelper.Base, XActionListener ):
@@ -2027,13 +2032,13 @@ class SetColListener( unohelper.Base, XActionListener ):
                     #tfcol_control.setText(str(2))
                     return
         else:
-            MyMsgBox('ƒGƒ‰[',u'ƒf[ƒ^ƒ|[ƒg‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢')
+            MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'ãƒ‡ãƒ¼ã‚¿ãƒãƒ¼ãƒˆã‚’é¸æŠã—ã¦ãã ã•ã„')
             return
         
-        MyMsgBox('ƒGƒ‰[',u'íœÏ‚İ‚Å‚·')
+        MyMsgBox('ã‚¨ãƒ©ãƒ¼',u'å‰Šé™¤æ¸ˆã¿ã§ã™')
 
 ##
-# ƒf[ƒ^‚ğ‘‚«‚Ş—ñ‚ğ‘S‚Ä‰Šú‰»‚·‚éƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ƒoƒbƒN
+# ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€åˆ—ã‚’å…¨ã¦åˆæœŸåŒ–ã™ã‚‹ãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 ##
 
 class SetAllColListener( unohelper.Base, XActionListener ):
@@ -2050,7 +2055,7 @@ class SetAllColListener( unohelper.Base, XActionListener ):
             
         
 ##
-# ƒ_ƒCƒAƒƒOì¬‚ÌŠÖ”
+# ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ä½œæˆã®é–¢æ•°
 ##
             
 def SetDialog():
@@ -2102,7 +2107,7 @@ def SetDialog():
     names = calc.sheets.getElementNames()
 
     for n in names:
-        if n != u'•Û‘¶—p':
+        if n != u'ä¿å­˜ç”¨':
             st_control.addItem (n, st_control.ItemCount)
     
     
