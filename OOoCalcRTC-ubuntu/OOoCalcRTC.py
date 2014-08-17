@@ -691,100 +691,102 @@ def GetDataType(m_port):
     if colon != -1:
         data_type = data_type[:colon]
 
-    if data_type == 'RTC/TimedDouble':
+    data_type = data_type.replace('RTC/','')
+
+    if data_type == 'TimedDouble':
         dt = RTC.TimedDouble(RTC.Time(0,0),0)
         return dt, [float, sig, m_value]
-    elif data_type == 'RTC/TimedLong':
+    elif data_type == 'TimedLong':
         dt = RTC.TimedLong(RTC.Time(0,0),0)
         return dt, [long, sig, m_value]
-    elif data_type == 'RTC/TimedFloat':
+    elif data_type == 'TimedFloat':
         dt = RTC.TimedFloat(RTC.Time(0,0),0)
         return dt, [float, sig, m_value]
-    elif data_type == 'RTC/TimedInt':
+    elif data_type == 'TimedInt':
         dt = RTC.TimedInt(RTC.Time(0,0),0)
         return dt, [int, sig, m_value]
-    elif data_type == 'RTC/TimedShort':
+    elif data_type == 'TimedShort':
         dt = RTC.TimedShort(RTC.Time(0,0),0)
         return dt, [int, sig, m_value]
-    elif data_type == 'RTC/TimedUDouble':
+    elif data_type == 'TimedUDouble':
         dt = RTC.TimedUDouble(RTC.Time(0,0),0)
         return dt, [float, sig, m_value]
-    elif data_type == 'RTC/TimedULong':
+    elif data_type == 'TimedULong':
         dt = RTC.TimedULong(RTC.Time(0,0),0)
         return dt, [long, sig, m_value]
-    elif data_type == 'RTC/TimedUFloat':
+    elif data_type == 'TimedUFloat':
         dt = RTC.TimedUFloat(RTC.Time(0,0),0)
         return dt, [float, sig, m_value]
-    elif data_type == 'RTC/TimedUInt':
+    elif data_type == 'TimedUInt':
         dt = RTC.TimedUInt(RTC.Time(0,0),0)
         return dt, [int, sig, m_value]
-    elif data_type == 'RTC/TimedUShort':
+    elif data_type == 'TimedUShort':
         dt = RTC.TimedUShort(RTC.Time(0,0),0)
         return dt, [int, sig, m_value]
-    elif data_type == 'RTC/TimedChar':
+    elif data_type == 'TimedChar':
         dt = RTC.TimedChar(RTC.Time(0,0),0)
         return dt, [str, sig, m_string]
-    elif data_type == 'RTC/TimedWChar':
+    elif data_type == 'TimedWChar':
         dt = RTC.TimedWChar(RTC.Time(0,0),0)
         return dt, [str, sig, m_string]
-    elif data_type == 'RTC/TimedBoolean':
+    elif data_type == 'TimedBoolean':
         dt = RTC.TimedBoolean(RTC.Time(0,0),0)
         return dt, [bool, sig, m_value]
-    elif data_type == 'RTC/TimedOctet':
+    elif data_type == 'TimedOctet':
         dt = RTC.TimedOctet(RTC.Time(0,0),0)
         return dt, [int, sig, m_value]
-    elif data_type == 'RTC/TimedString':
+    elif data_type == 'TimedString':
         dt = RTC.TimedString(RTC.Time(0,0),0)
         return dt, [str, sig, m_string]
-    elif data_type == 'RTC/TimedWString':
+    elif data_type == 'TimedWString':
         dt = RTC.TimedWString(RTC.Time(0,0),0)
         return dt, [str, sig, m_string]
-    elif data_type == 'RTC/TimedDoubleSeq':
+    elif data_type == 'TimedDoubleSeq':
         dt = RTC.TimedDoubleSeq(RTC.Time(0,0),[])
         return dt, [float, sec, m_value]
-    elif data_type == 'RTC/TimedLongSeq':
+    elif data_type == 'TimedLongSeq':
         dt = RTC.TimedLongSeq(RTC.Time(0,0),[])
         return dt, [long, sec, m_value]
-    elif data_type == 'RTC/TimedFloatSeq':
+    elif data_type == 'TimedFloatSeq':
         dt = RTC.TimedFloatSeq(RTC.Time(0,0),[])
         return dt, [float, sec, m_value]
-    elif data_type == 'RTC/TimedIntSeq':
+    elif data_type == 'TimedIntSeq':
         dt = RTC.TimedIntSeq(RTC.Time(0,0),[])
         return dt, [int, sec, m_value]
-    elif data_type == 'RTC/TimedShortSeq':
+    elif data_type == 'TimedShortSeq':
         dt = RTC.TimedShortSeq(RTC.Time(0,0),[])
         return dt, [int, sec, m_value]
-    elif data_type == 'RTC/TimedUDoubleSeq':
+    elif data_type == 'TimedUDoubleSeq':
         dt = RTC.TimedUDoubleSeq(RTC.Time(0,0),[])
         return dt, [float, sec, m_value]
-    elif data_type == 'RTC/TimedULongSeq':
+    elif data_type == 'TimedULongSeq':
         dt = RTC.TimedULongSeq(RTC.Time(0,0),[])
         return dt, [long, sec, m_value]
-    elif data_type == 'RTC/TimedUFloatSeq':
+    elif data_type == 'TimedUFloatSeq':
         dt = RTC.TimedUFloatSeq(RTC.Time(0,0),[])
         return dt, [float, sec, m_value]
-    elif data_type == 'RTC/TimedUIntSeq':
+    elif data_type == 'TimedUIntSeq':
         dt = RTC.TimedUIntSeq(RTC.Time(0,0),[])
         return dt, [int, sec, m_value]
-    elif data_type == 'RTC/TimedUShortSeq':
+    elif data_type == 'TimedUShortSeq':
         dt = RTC.TimedUShortSeq(RTC.Time(0,0),[])
         return dt, [int, sec, m_value]
-    elif data_type == 'RTC/TimedCharSeq':
+    elif data_type == 'TimedCharSeq':
         dt = RTC.TimedCharSeq(RTC.Time(0,0),[])
         return dt, [str, sec, m_string]
-    elif data_type == 'RTC/TimedWCharSeq':
+    elif data_type == 'TimedWCharSeq':
         dt = RTC.TimedWCharSeq(RTC.Time(0,0),[])
         return dt, [str, sec, m_string]
-    elif data_type == 'RTC/TimedBooleanSeq':
+    elif data_type == 'TimedBooleanSeq':
         dt = RTC.TimedBooleanSeq(RTC.Time(0,0),[])
         return dt, [bool, sec, m_value]
-    elif data_type == 'RTC/TimedOctetSeq':
+    elif data_type == 'TimedOctetSeq':
         dt = RTC.TimedOctetSeq(RTC.Time(0,0),[])
         return dt, [int, sec, m_value]
-    elif data_type == 'RTC/TimedStringSeq':
+    elif data_type == 'TimedStringSeq':
         dt = RTC.TimedStringSeq(RTC.Time(0,0),[])
         return dt, [str, sec, m_string]
-    elif data_type == 'RTC/TimedWStringSeq':
+    elif data_type == 'TimedWStringSeq':
         dt = RTC.TimedWStringSeq(RTC.Time(0,0),[])
         return dt, [str, sec, m_string]
     
