@@ -91,8 +91,33 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "max_instance",      "10",
                   "language",          "Python",
                   "lang_type",         "script",
+                  "conf.dataport0.port_type", "DataInPort",
+                  "conf.dataport0.data_type", "TimedFloat",
+                  "conf.dataport0.column", "1",
+                  "conf.dataport0.start_row", "A",
+                  "conf.dataport0.end_row", "A",
+                  "conf.dataport0.sheetname", "sheet1",
+                  "conf.__widget__.file_path", "text",
+                  "conf.__widget__.port_type", "radio",
+                  "conf.__widget__.column", "spin",
+                  "conf.__widget__.start_row", "text",
+                  "conf.__widget__.end_row", "text",
+                  "conf.__widget__.sheetname", "text",
+                  "conf.__widget__.data_type", "radio",
+                  "conf.__constraints__.column", "1<=x<=1000",
+                  "conf.__constraints__.port_type", "(DataInPort,DataOutPort)",
+                  "conf.__constraints__.data_type", "(TimedDouble,TimedLong,TimedFloat,TimedShort,TimedULong,TimedUShort,TimedChar,TimedWChar,TimedBoolean,TimedOctet,TimedString,TimedWString,TimedDoubleSeq,TimedLongSeq,TimedFloatSeq,TimedShortSeq,TimedULongSeq,TimedUShortSeq,TimedCharSeq,TimedWCharSeq,TimedOctetSeq,TimedStringSeq,TimedWStringSeq)",
                   ""]
 
+##
+# コンフィギュレーションパラメータが更新されたときのコールバック
+##
+
+class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
+   def __init__(self,e_rtc):
+        self.m_rtc =  e_rtc
+   def __call__(self, config_param_name):
+        self.m_rtc.ConfigUpdate()
 
 def SetCoding(m_str):
     if os.name == 'posix':
@@ -100,6 +125,10 @@ def SetCoding(m_str):
     elif os.name == 'nt':
         return m_str.decode('utf-8').encode('cp932')
 
+
+##
+# サービスポートDataBase
+##
 
 class mDataBase_i (DataBase__POA.mDataBase):
 
@@ -188,6 +217,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.Num2 = 0
     self._OutPorts = {}
     self._InPorts = {}
+    self._ConfOutPorts = {}
+    self._ConfInPorts = {}
 
     self._DataBasePort = OpenRTM_aist.CorbaPort("DataBase")
     self._database = mDataBase_i()
@@ -196,6 +227,15 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       self.calc = OOoCalc()
     except NotOOoCalcException:
       return
+
+
+    self.conf_data_type = ["TimedFloat"]
+    self.conf_port_type = ["DataInPort"]
+    self.conf_column = [1]
+    self.conf_start_row = ["A"]
+    self.conf_end_row = ["A"]
+    self.conf_sheetname = ["sheet1"]
+    
     
     return
   ##
@@ -221,6 +261,63 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   def m_deactivate(self):
       m_ec = self.get_owned_contexts()
       m_ec[0].deactivate_component(self._objref)
+
+  ##
+  # コンフィギュレーションパラメータによりアウトポートを追加する関数
+  ##
+
+  def m_addConfOutPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
+
+    sig = m_DataType.Single
+    sec = m_DataType.Sequence
+
+    
+    
+    m_data_o, m_data_type =  GetDataSType(data_type)
+    
+
+    if m_data_o:
+        
+        
+        m_outport = OpenRTM_aist.OutPort(name, m_data_o)
+        self.addOutPort(name, m_outport)
+        
+
+        if m_data_type[1] == sig:
+            self._ConfOutPorts[name] = MyOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+        else:
+            self._ConfOutPorts[name] = MyOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+
+
+  ##
+  # コンフィギュレーションパラメータによりインポートを追加する関数
+  ##
+  
+  def m_addConfInPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
+    sig = m_DataType.Single
+    sec = m_DataType.Sequence
+
+    
+    
+    m_data_i, m_data_type =  GetDataSType(data_type)
+    
+    if m_data_i:
+        
+        
+        m_inport = OpenRTM_aist.InPort(name, m_data_i)
+        self.addInPort(name, m_inport)
+        
+        
+        #self._InPorts[name] = MyPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
+        if m_data_type[1] == sig:
+            self._ConfInPorts[name] = MyInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+        else:
+            self._ConfInPorts[name] = MyInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+
+
+        
+        m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
+                                          DataListener(self._ConfInPorts[name]))
 
   ##
   # アウトポート追加の関数
@@ -249,20 +346,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             self._OutPorts[name] = MyOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
         
         
-        sheetname = sn   
-        if self.calc.sheets.hasByName(sheetname):
-            sheet = self.calc.sheets.getByName(sheetname)
         
-            
-            
-            if mlen == "":
-                CN = row + str(1)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = str(m_inport[0])
-            else:
-                CN = row + str(1) + ':' + mlen + str(1)
-                cell = sheet.getCellRangeByName(CN)
-                cell.getCellByPosition(0, 0).String = str(m_inport[0])
                 
     
 
@@ -298,20 +382,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
                                           DataListener(self._InPorts[name]))
         
-        sheetname = sn
-        if self.calc.sheets.hasByName(sheetname):
-            sheet = self.calc.sheets.getByName(sheetname)
         
-
-
-            if mlen == "":
-                CN = row + str(1)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = str(m_outport[0])
-            else:
-                CN = row + str(1) + ':' + mlen + str(1)
-                cell = sheet.getCellRangeByName(CN)
-                cell.getCellByPosition(0, 0).String = str(m_outport[0])
 
   ##
   # アウトポート削除の関数
@@ -333,6 +404,67 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       self.removePort(inport._port)
       del self._InPorts[inport._name]
 
+
+  ##
+  # コンフィギュレーションパラメータが変更されたときに呼び出される関数
+  ##
+  
+  def ConfigUpdate(self):
+      
+      for i in range(0, 100):
+          dn = "dataport" + str(i+1)
+          
+          
+          if self._configsets.haveConfig(dn):
+              
+              self._configsets.activateConfigurationSet(dn)
+              self._configsets.update()
+
+              
+              tdt = ""
+              tmp = None
+              if self._ConfInPorts.has_key(dn):
+                  tmp = self._ConfInPorts[dn]
+                  tdt = "DataInPort"
+              if self._ConfOutPorts.has_key(dn):
+                  tmp = self._ConfOutPorts[dn]
+                  tdt = "DataOutPort"
+
+              data_type = ""
+              if tmp != None:
+                  profile = tmp._port.get_port_profile()
+                  props = nvlist_to_dict(profile.properties)
+                  data_type =  props['dataport.data_type']
+                  if data_type.startswith('IDL:'):
+                    data_type = data_type[4:]
+                    colon = data_type.rfind(':')
+                  if colon != -1:
+                    data_type = data_type[:colon]
+
+                    data_type = data_type.replace('RTC/','')
+              
+
+              if tdt != None and data_type == self.conf_data_type[0]:# and self.conf_port_type[0] == tdt:
+                  tmp._row = self.conf_start_row[0]
+                  tmp._sn = self.conf_sheetname[0]
+                  tmp._col = self.conf_column[0]
+                  tmp._length = self.conf_end_row[0]
+                  
+
+              else:
+                  
+                  if tmp != None:
+                      tmp._port.disconnect_all()
+                      self.removePort(tmp._port)
+
+                  
+
+                  if self.conf_port_type[0] == "DataInPort":
+                      self.m_addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
+                  elif self.conf_port_type[0] == "DataOutPort":
+                      self.m_addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
+                      
+
   ##
   # 初期化処理用コールバック関数
   ##
@@ -342,6 +474,17 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     self._DataBasePort.registerProvider("database", "DataBase::mDataBase", self._database)
     self.addPort(self._DataBasePort)
+
+    
+    self.addConfigurationSetListener(OpenRTM_aist.ConfigurationSetListenerType.ON_SET_CONFIG_SET, MyConfigUpdateParam(self))
+
+    self.bindParameter("data_type", self.conf_data_type, "TimedFloat")
+    self.bindParameter("port_type", self.conf_port_type, "DataInPort")
+    self.bindParameter("column", self.conf_column, "1")
+    self.bindParameter("start_row", self.conf_start_row, "A")
+    self.bindParameter("end_row", self.conf_end_row, "A")
+    self.bindParameter("sheetname", self.conf_sheetname, "sheet1")
+    
     
     
     return RTC.RTC_OK
@@ -352,6 +495,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   ##
   
   def onDeactivated(self, ec_id):
+
+    
+        
+    
     self.calc.document.addActionLock()
     
     for n,op in self._OutPorts.items():
@@ -369,7 +516,28 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             cell = sheet.getCellRangeByName(CN)
             cell.CellBackColor = RGB(255, 255, 255)
 
+    for n,op in self._ConfOutPorts.items():
+        #m_row = re.split(':',op._row)
+        t_n = op._num
+        if op.state:
+            t_n -= 1
+        if op._length == "":
+            CN = op._row + str(t_n)
+        else:
+            CN = op._row + str(t_n) + ':' + op._length + str(t_n)
+        sheetname = op._sn
+        if self.calc.sheets.hasByName(sheetname):
+            sheet = self.calc.sheets.getByName(sheetname)
+            cell = sheet.getCellRangeByName(CN)
+            cell.CellBackColor = RGB(255, 255, 255)
+
     self.calc.document.removeActionLock()
+
+    for n,op in self._ConfOutPorts.items():
+        op._num = int(op._col)
+
+    for n,ip in self._ConfInPorts.items():
+        ip._num = int(ip._col)
     
     return RTC.RTC_OK
 
@@ -385,6 +553,17 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     
     self.calc.document.addActionLock()
+
+
+
+    for n,op in self._ConfOutPorts.items():
+        op.putData(self)
+            
+    for n,ip in self._ConfInPorts.items():
+        ip.putData(self)
+
+
+            
     
     for n,op in self._OutPorts.items():
         
@@ -394,6 +573,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     for n,ip in self._InPorts.items():
         if len(ip.attachports) == 0:
             ip.putData(self)
+
+
+            
             
             
         
@@ -675,6 +857,111 @@ class m_DataType:
     Value = 1
     def __init__(self):
         pass
+
+def GetDataSType(data_type):
+    sig = m_DataType.Single
+    sec = m_DataType.Sequence
+
+    m_string = m_DataType.String
+    m_value = m_DataType.Value
+    
+    if data_type == 'TimedDouble':
+        dt = RTC.TimedDouble(RTC.Time(0,0),0)
+        return dt, [float, sig, m_value]
+    elif data_type == 'TimedLong':
+        dt = RTC.TimedLong(RTC.Time(0,0),0)
+        return dt, [long, sig, m_value]
+    elif data_type == 'TimedFloat':
+        dt = RTC.TimedFloat(RTC.Time(0,0),0)
+        return dt, [float, sig, m_value]
+    elif data_type == 'TimedInt':
+        dt = RTC.TimedInt(RTC.Time(0,0),0)
+        return dt, [int, sig, m_value]
+    elif data_type == 'TimedShort':
+        dt = RTC.TimedShort(RTC.Time(0,0),0)
+        return dt, [int, sig, m_value]
+    elif data_type == 'TimedUDouble':
+        dt = RTC.TimedUDouble(RTC.Time(0,0),0)
+        return dt, [float, sig, m_value]
+    elif data_type == 'TimedULong':
+        dt = RTC.TimedULong(RTC.Time(0,0),0)
+        return dt, [long, sig, m_value]
+    elif data_type == 'TimedUFloat':
+        dt = RTC.TimedUFloat(RTC.Time(0,0),0)
+        return dt, [float, sig, m_value]
+    elif data_type == 'TimedUInt':
+        dt = RTC.TimedUInt(RTC.Time(0,0),0)
+        return dt, [int, sig, m_value]
+    elif data_type == 'TimedUShort':
+        dt = RTC.TimedUShort(RTC.Time(0,0),0)
+        return dt, [int, sig, m_value]
+    elif data_type == 'TimedChar':
+        dt = RTC.TimedChar(RTC.Time(0,0),0)
+        return dt, [str, sig, m_string]
+    elif data_type == 'TimedWChar':
+        dt = RTC.TimedWChar(RTC.Time(0,0),0)
+        return dt, [str, sig, m_string]
+    elif data_type == 'TimedBoolean':
+        dt = RTC.TimedBoolean(RTC.Time(0,0),0)
+        return dt, [bool, sig, m_value]
+    elif data_type == 'TimedOctet':
+        dt = RTC.TimedOctet(RTC.Time(0,0),0)
+        return dt, [int, sig, m_value]
+    elif data_type == 'TimedString':
+        dt = RTC.TimedString(RTC.Time(0,0),0)
+        return dt, [str, sig, m_string]
+    elif data_type == 'TimedWString':
+        dt = RTC.TimedWString(RTC.Time(0,0),0)
+        return dt, [str, sig, m_string]
+    elif data_type == 'TimedDoubleSeq':
+        dt = RTC.TimedDoubleSeq(RTC.Time(0,0),[])
+        return dt, [float, sec, m_value]
+    elif data_type == 'TimedLongSeq':
+        dt = RTC.TimedLongSeq(RTC.Time(0,0),[])
+        return dt, [long, sec, m_value]
+    elif data_type == 'TimedFloatSeq':
+        dt = RTC.TimedFloatSeq(RTC.Time(0,0),[])
+        return dt, [float, sec, m_value]
+    elif data_type == 'TimedIntSeq':
+        dt = RTC.TimedIntSeq(RTC.Time(0,0),[])
+        return dt, [int, sec, m_value]
+    elif data_type == 'TimedShortSeq':
+        dt = RTC.TimedShortSeq(RTC.Time(0,0),[])
+        return dt, [int, sec, m_value]
+    elif data_type == 'TimedUDoubleSeq':
+        dt = RTC.TimedUDoubleSeq(RTC.Time(0,0),[])
+        return dt, [float, sec, m_value]
+    elif data_type == 'TimedULongSeq':
+        dt = RTC.TimedULongSeq(RTC.Time(0,0),[])
+        return dt, [long, sec, m_value]
+    elif data_type == 'TimedUFloatSeq':
+        dt = RTC.TimedUFloatSeq(RTC.Time(0,0),[])
+        return dt, [float, sec, m_value]
+    elif data_type == 'TimedUIntSeq':
+        dt = RTC.TimedUIntSeq(RTC.Time(0,0),[])
+        return dt, [int, sec, m_value]
+    elif data_type == 'TimedUShortSeq':
+        dt = RTC.TimedUShortSeq(RTC.Time(0,0),[])
+        return dt, [int, sec, m_value]
+    elif data_type == 'TimedCharSeq':
+        dt = RTC.TimedCharSeq(RTC.Time(0,0),[])
+        return dt, [str, sec, m_string]
+    elif data_type == 'TimedWCharSeq':
+        dt = RTC.TimedWCharSeq(RTC.Time(0,0),[])
+        return dt, [str, sec, m_string]
+    elif data_type == 'TimedBooleanSeq':
+        dt = RTC.TimedBooleanSeq(RTC.Time(0,0),[])
+        return dt, [bool, sec, m_value]
+    elif data_type == 'TimedOctetSeq':
+        dt = RTC.TimedOctetSeq(RTC.Time(0,0),[])
+        return dt, [int, sec, m_value]
+    elif data_type == 'TimedStringSeq':
+        dt = RTC.TimedStringSeq(RTC.Time(0,0),[])
+        return dt, [str, sec, m_string]
+    elif data_type == 'TimedWStringSeq':
+        dt = RTC.TimedWStringSeq(RTC.Time(0,0),[])
+        return dt, [str, sec, m_string]
+    
 
 ##
 # データ型を返す関数
