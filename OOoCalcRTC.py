@@ -141,8 +141,11 @@ class mDataBase_i (DataBase__POA.mDataBase):
         if OOoRTC.calc_comp.calc.sheets.hasByName(sn):
             sheet = OOoRTC.calc_comp.calc.sheets.getByName(sn)
             CN = l+c
-            cell = sheet.getCellRangeByName(CN)
-            return cell, sheet
+            try:
+                cell = sheet.getCellRangeByName(CN)
+                return cell, sheet
+            except:
+                pass
         else:
             return None
 
@@ -444,25 +447,26 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
                     data_type = data_type.replace('RTC/','')
               
 
-              if tdt != None and data_type == self.conf_data_type[0]:# and self.conf_port_type[0] == tdt:
-                  tmp._row = self.conf_start_row[0]
-                  tmp._sn = self.conf_sheetname[0]
-                  tmp._col = self.conf_column[0]
-                  tmp._length = self.conf_end_row[0]
-                  
+              if int(self.conf_column[0]) > 0 and len(self.conf_start_row[0]) > 0:
+                  if tdt != None and data_type == self.conf_data_type[0]:# and self.conf_port_type[0] == tdt:
+                      tmp._row = self.conf_start_row[0]
+                      tmp._sn = self.conf_sheetname[0]
+                      tmp._col = self.conf_column[0]
+                      tmp._length = self.conf_end_row[0]
+                      
 
-              else:
-                  
-                  if tmp != None:
-                      tmp._port.disconnect_all()
-                      self.removePort(tmp._port)
+                  else:
+                      
+                      if tmp != None:
+                          tmp._port.disconnect_all()
+                          self.removePort(tmp._port)
 
-                  
-
-                  if self.conf_port_type[0] == "DataInPort":
-                      self.m_addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
-                  elif self.conf_port_type[0] == "DataOutPort":
-                      self.m_addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
+                      
+                      
+                      if self.conf_port_type[0] == "DataInPort":
+                        self.m_addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
+                      elif self.conf_port_type[0] == "DataOutPort":
+                        self.m_addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
                       
 
   ##
@@ -513,8 +517,11 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         sheetname = op._sn
         if self.calc.sheets.hasByName(sheetname):
             sheet = self.calc.sheets.getByName(sheetname)
-            cell = sheet.getCellRangeByName(CN)
-            cell.CellBackColor = RGB(255, 255, 255)
+            try:
+                cell = sheet.getCellRangeByName(CN)
+                cell.CellBackColor = RGB(255, 255, 255)
+            except:
+                pass
 
     for n,op in self._ConfOutPorts.items():
         #m_row = re.split(':',op._row)
@@ -528,8 +535,11 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         sheetname = op._sn
         if self.calc.sheets.hasByName(sheetname):
             sheet = self.calc.sheets.getByName(sheetname)
-            cell = sheet.getCellRangeByName(CN)
-            cell.CellBackColor = RGB(255, 255, 255)
+            try:
+                cell = sheet.getCellRangeByName(CN)
+                cell.CellBackColor = RGB(255, 255, 255)
+            except:
+                pass
 
     self.calc.document.removeActionLock()
 
@@ -654,8 +664,10 @@ class MyPortObject:
                 CN = self._row + str(self._num)
             else:
                 CN = self._row + str(self._num) + ':' + self._length + str(self._num)
-
-            cell = sheet.getCellRangeByName(CN)
+            try:
+                cell = sheet.getCellRangeByName(CN)
+            except:
+                pass
             
             return cell, sheet
         else:
@@ -727,8 +739,12 @@ class MyPortObject:
                 CN2 = self._row + str(t_n)
             else:
                 CN2 = self._row + str(t_n) + ':' + self._length + str(t_n)
-            cell2 = sheet.getCellRangeByName(CN2)
-            cell2.CellBackColor = RGB(255, 255, 255)
+
+            try:
+                cell2 = sheet.getCellRangeByName(CN2)
+                cell2.CellBackColor = RGB(255, 255, 255)
+            except:
+                pass
 
 
         return val
@@ -1632,75 +1648,78 @@ def LoadSheet():
             _path = []
             while True:
                 CN = 'A' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                if cell.String == '':
-                    return
-                m_name = re.split(':',cell.String)
-                if len(m_name) < 2:
-                    return
-                #MyMsgBox('',str(m_name[1]))
-                if m_hostname == m_name[1]:
+                try:
+                    cell = sheet.getCellRangeByName(CN)
+                    if cell.String == '':
+                        return
+                    m_name = re.split(':',cell.String)
+                    if len(m_name) < 2:
+                        return
+                    #MyMsgBox('',str(m_name[1]))
+                    if m_hostname == m_name[1]:
+                        pass
+                    else:
+                        _paths = getPathList(m_name[1])
+                        m_hostname = m_name[1]
+                    if _paths == None:
+                        return
+                    for p in _paths:
+                        if p[0] == m_name:
+                            F_Name = p[0][-2] + p[0][-1]
+                            profile = p[1].get_port_profile()
+                            props = nvlist_to_dict(profile.properties)
+                            CN = 'B' + str(count)
+                            cell = sheet.getCellRangeByName(CN)
+                            if cell.String == '':
+                                return
+                            row = cell.String
+
+                            CN = 'C' + str(count)
+                            cell = sheet.getCellRangeByName(CN)
+                            if cell.String == '':
+                                return
+                            col = cell.String
+
+                            CN = 'D' + str(count)
+                            cell = sheet.getCellRangeByName(CN)
+                            #if cell.String == '':
+                                #return
+                            mlen = cell.String
+                            
+                            
+                            CN = 'E' + str(count)
+                            cell = sheet.getCellRangeByName(CN)
+                            if cell.String == '':
+                                return
+                            sn = cell.String
+
+                            CN = 'F' + str(count)
+                            cell = sheet.getCellRangeByName(CN)
+                            if cell.String == '':
+                                return
+                            if str(cell.String) == "True":
+                                mstate = True
+                            else:
+                                mstate = False
+
+                            CN = 'G' + str(count)
+                            cell = sheet.getCellRangeByName(CN)
+                            tmp = re.split(':',cell.String)
+                            t_attachports = {}
+                            for pp in tmp:
+                                if pp != "":
+                                    t_attachports[pp] = pp
+                                
+                            
+
+                                
+                            
+                            if props['port.port_type'] == 'DataInPort':
+                                OOoRTC.calc_comp.m_addOutPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
+                            elif props['port.port_type'] == 'DataOutPort':
+                                OOoRTC.calc_comp.m_addInPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
+                except:
                     pass
-                else:
-                    _paths = getPathList(m_name[1])
-                    m_hostname = m_name[1]
-                if _paths == None:
-                    return
-                for p in _paths:
-                    if p[0] == m_name:
-                        F_Name = p[0][-2] + p[0][-1]
-                        profile = p[1].get_port_profile()
-                        props = nvlist_to_dict(profile.properties)
-                        CN = 'B' + str(count)
-                        cell = sheet.getCellRangeByName(CN)
-                        if cell.String == '':
-                            return
-                        row = cell.String
-
-                        CN = 'C' + str(count)
-                        cell = sheet.getCellRangeByName(CN)
-                        if cell.String == '':
-                            return
-                        col = cell.String
-
-                        CN = 'D' + str(count)
-                        cell = sheet.getCellRangeByName(CN)
-                        #if cell.String == '':
-                            #return
-                        mlen = cell.String
-                        
-                        
-                        CN = 'E' + str(count)
-                        cell = sheet.getCellRangeByName(CN)
-                        if cell.String == '':
-                            return
-                        sn = cell.String
-
-                        CN = 'F' + str(count)
-                        cell = sheet.getCellRangeByName(CN)
-                        if cell.String == '':
-                            return
-                        if str(cell.String) == "True":
-                            mstate = True
-                        else:
-                            mstate = False
-
-                        CN = 'G' + str(count)
-                        cell = sheet.getCellRangeByName(CN)
-                        tmp = re.split(':',cell.String)
-                        t_attachports = {}
-                        for pp in tmp:
-                            if pp != "":
-                                t_attachports[pp] = pp
-                            
-                        
-
-                            
-                        
-                        if props['port.port_type'] == 'DataInPort':
-                            OOoRTC.calc_comp.m_addOutPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
-                        elif props['port.port_type'] == 'DataOutPort':
-                            OOoRTC.calc_comp.m_addInPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
                 count = count + 1
 
 
@@ -1725,127 +1744,138 @@ def UpdateSaveSheet():
         if calc.sheets.hasByName(sheetname):
             sheet = calc.sheets.getByName(sheetname)
             for i in range(1, 30):
-                CN = 'A' + str(i)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = ''
+                try:
+                    CN = 'A' + str(i)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = ''
 
-                CN = 'B' + str(i)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = ''
+                    CN = 'B' + str(i)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = ''
 
-                CN = 'C' + str(i)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = ''
+                    CN = 'C' + str(i)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = ''
 
-                CN = 'D' + str(i)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = ''
+                    CN = 'D' + str(i)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = ''
 
-                CN = 'E' + str(i)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = ''
+                    CN = 'E' + str(i)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = ''
 
-                CN = 'F' + str(i)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = ''
+                    CN = 'F' + str(i)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = ''
 
-                CN = 'G' + str(i)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = ''
+                    CN = 'G' + str(i)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = ''
+                except:
+                    pass
                 
             count = 1
             for n,o in OOoRTC.calc_comp._OutPorts.items():
                 CN = 'A' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                pn = ''
-                for j in range(0, len(o._port_a[0])):
-                    if j == 0:
-                        pn = o._port_a[0][j]
-                    else:
-                        pn = pn + ':' + o._port_a[0][j]
-                cell.String = str(pn)
+                try:
+                    cell = sheet.getCellRangeByName(CN)
+                    pn = ''
+                    for j in range(0, len(o._port_a[0])):
+                        if j == 0:
+                            pn = o._port_a[0][j]
+                        else:
+                            pn = pn + ':' + o._port_a[0][j]
+                    cell.String = str(pn)
 
-                CN = 'B' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = o._row
+                    CN = 'B' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = o._row
 
-                CN = 'C' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = o._col
+                    CN = 'C' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = o._col
 
-                CN = 'D' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = o._length
+                    CN = 'D' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = o._length
 
-                CN = 'E' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = o._sn
+                    CN = 'E' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = o._sn
 
-                CN = 'F' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = str(o.state)
+                    CN = 'F' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = str(o.state)
 
-                CN = 'G' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                pn = ''
-                tmp = 0
-                
-                for k,j in o.attachports.items():
-                    if tmp == 0:
-                        pn = j
-                    else:
-                        pn = pn + ':' + j
-                    tmp += 1
-                        
+                    CN = 'G' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    pn = ''
+                    tmp = 0
                     
-                cell.String = str(pn)
+                    for k,j in o.attachports.items():
+                        if tmp == 0:
+                            pn = j
+                        else:
+                            pn = pn + ':' + j
+                        tmp += 1
+                            
+                        
+                    cell.String = str(pn)
+                except:
+                    pass
 
                 count = count + 1
             for n,i in OOoRTC.calc_comp._InPorts.items():
                 CN = 'A' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                pn = ''
-                for j in range(0, len(i._port_a[0])):
-                    if j == 0:
-                        pn = i._port_a[0][j]
-                    else:
-                        pn = pn + ':' + i._port_a[0][j]
-                cell.String = str(pn)
 
-                CN = 'B' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = i._row
+                try:
+                    cell = sheet.getCellRangeByName(CN)
+                    pn = ''
+                    for j in range(0, len(i._port_a[0])):
+                        if j == 0:
+                            pn = i._port_a[0][j]
+                        else:
+                            pn = pn + ':' + i._port_a[0][j]
+                    cell.String = str(pn)
 
-                CN = 'C' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = i._col
+                    CN = 'B' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = i._row
 
-                CN = 'D' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = i._length
+                    CN = 'C' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = i._col
 
-                CN = 'E' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = i._sn
+                    CN = 'D' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = i._length
 
-                CN = 'F' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                cell.String = str(i.state)
+                    CN = 'E' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = i._sn
 
-                CN = 'G' + str(count)
-                cell = sheet.getCellRangeByName(CN)
-                pn = ''
-                tmp = 0
-                
-                for k,j in i.attachports.items():
-                    if tmp == 0:
-                        pn = j
-                    else:
-                        pn = pn + ':' + j
-                    tmp += 1
-                        
+                    CN = 'F' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    cell.String = str(i.state)
+
+                    CN = 'G' + str(count)
+                    cell = sheet.getCellRangeByName(CN)
+                    pn = ''
+                    tmp = 0
                     
-                cell.String = str(pn)
+                    for k,j in i.attachports.items():
+                        if tmp == 0:
+                            pn = j
+                        else:
+                            pn = pn + ':' + j
+                        tmp += 1
+                            
+                        
+                    cell.String = str(pn)
+                    
+                except:
+                    pass
                 
                 count = count + 1
         else:
