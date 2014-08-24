@@ -40,14 +40,14 @@ from com.sun.star.view import XSelectionChangeListener
 from com.sun.star.awt import XTextListener
 
 
-import DataBase_idl
+import SpreadSheet_idl
 
 
 
 import OOoRTC
-#from DataBase_idl_example import *
+#from SpreadSheet_idl_example import *
 from omniORB import PortableServer
-import DataBase, DataBase__POA
+import SpreadSheet, SpreadSheet__POA
 
 
 
@@ -127,10 +127,10 @@ def SetCoding(m_str):
 
 
 ##
-# サービスポートDataBase
+# サービスポートSpreadSheet
 ##
 
-class mDataBase_i (DataBase__POA.mDataBase):
+class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
 
     def __init__(self):
@@ -223,8 +223,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self._ConfOutPorts = {}
     self._ConfInPorts = {}
 
-    self._DataBasePort = OpenRTM_aist.CorbaPort("DataBase")
-    self._database = mDataBase_i()
+    self._SpreadSheetPort = OpenRTM_aist.CorbaPort("SpreadSheet")
+    self._spreadsheet = mSpreadSheet_i()
 
     try:
       self.calc = OOoCalc()
@@ -476,8 +476,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   def onInitialize(self):
     OOoRTC.calc_comp = self
 
-    self._DataBasePort.registerProvider("database", "DataBase::mDataBase", self._database)
-    self.addPort(self._DataBasePort)
+    self._SpreadSheetPort.registerProvider("spreadsheet", "SpreadSheet::mSpreadSheet", self._spreadsheet)
+    self.addPort(self._SpreadSheetPort)
 
     
     self.addConfigurationSetListener(OpenRTM_aist.ConfigurationSetListenerType.ON_SET_CONFIG_SET, MyConfigUpdateParam(self))
