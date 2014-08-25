@@ -91,12 +91,20 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "max_instance",      "10",
                   "language",          "Python",
                   "lang_type",         "script",
+                  "conf.default.actionLock", "1",
+                  "conf.default.Red", "255",
+                  "conf.default.Green", "255",
+                  "conf.default.Blue", "0",
                   "conf.dataport0.port_type", "DataInPort",
                   "conf.dataport0.data_type", "TimedFloat",
                   "conf.dataport0.column", "1",
                   "conf.dataport0.start_row", "A",
                   "conf.dataport0.end_row", "A",
                   "conf.dataport0.sheetname", "sheet1",
+                  "conf.__widget__.actionLock", "radio",
+                  "conf.__widget__.Red", "spin",
+                  "conf.__widget__.Green", "spin",
+                  "conf.__widget__.Blue", "spin",
                   "conf.__widget__.file_path", "text",
                   "conf.__widget__.port_type", "radio",
                   "conf.__widget__.column", "spin",
@@ -104,6 +112,10 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.__widget__.end_row", "text",
                   "conf.__widget__.sheetname", "text",
                   "conf.__widget__.data_type", "radio",
+                  "conf.__constraints__.actionLock", "(0,1)",
+                  "conf.__constraints__.Red", "0<=x<=255",
+                  "conf.__constraints__.Green", "0<=x<=255",
+                  "conf.__constraints__.Blue", "0<=x<=255",
                   "conf.__constraints__.column", "1<=x<=1000",
                   "conf.__constraints__.port_type", "(DataInPort,DataOutPort)",
                   "conf.__constraints__.data_type", "(TimedDouble,TimedLong,TimedFloat,TimedShort,TimedULong,TimedUShort,TimedChar,TimedWChar,TimedBoolean,TimedOctet,TimedString,TimedWString,TimedDoubleSeq,TimedLongSeq,TimedFloatSeq,TimedShortSeq,TimedULongSeq,TimedUShortSeq,TimedCharSeq,TimedWCharSeq,TimedOctetSeq,TimedStringSeq,TimedWStringSeq)",
@@ -238,6 +250,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.conf_start_row = ["A"]
     self.conf_end_row = ["A"]
     self.conf_sheetname = ["sheet1"]
+    self.actionLock = [1]
+    self.Red = [255]
+    self.Green = [255]
+    self.Blue = [0]
     
     
     return
@@ -488,6 +504,12 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.bindParameter("start_row", self.conf_start_row, "A")
     self.bindParameter("end_row", self.conf_end_row, "A")
     self.bindParameter("sheetname", self.conf_sheetname, "sheet1")
+    self.bindParameter("actionLock", self.actionLock, "1")
+    self.bindParameter("Red", self.Red, "255")
+    self.bindParameter("Green", self.Green, "255")
+    self.bindParameter("Blue", self.Blue, "0")
+    
+    
     
     
     
@@ -561,8 +583,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     
     
 
-    
-    self.calc.document.addActionLock()
+    if int(self.actionLock[0]) == 1:
+        self.calc.document.addActionLock()
 
 
 
@@ -590,8 +612,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             
         
             
-
-    self.calc.document.removeActionLock()
+    if int(self.actionLock[0]) == 1:
+        self.calc.document.removeActionLock()
 
     for n,op in self._OutPorts.items():
         if len(op.attachports) != 0:
@@ -708,11 +730,11 @@ class MyPortObject:
         
                     
                     
-    def putOut(self, cell, sheet):
+    def putOut(self, cell, sheet, m_cal):
         m_string = m_DataType.String
         m_value = m_DataType.Value
 
-        cell.CellBackColor = RGB(255, 255, 0)
+        cell.CellBackColor = RGB(int(m_cal.Red[0]), int(m_cal.Green[0]), int(m_cal.Blue[0]))
         
         if self._dataType[2] == m_string:
             if  self._length == "":
@@ -808,7 +830,7 @@ class MyOutPort(MyPortObject):
         cell, sheet = self.GetCell(m_cal)
 
         if cell != None:
-            val = self.putOut(cell, sheet)
+            val = self.putOut(cell, sheet, m_cal)
             if self._length == "":
                 if val != "":
                     self._data.data = self._dataType[0](val)
@@ -837,7 +859,7 @@ class MyOutPortSeq(MyPortObject):
         cell, sheet = self.GetCell(m_cal)
 
         if cell != None:
-            val = self.putOut(cell, sheet)
+            val = self.putOut(cell, sheet, m_cal)
             if self._length == "":
                 if val != "":
                     self._data.data = self._dataType[0](val)
@@ -977,6 +999,8 @@ def GetDataSType(data_type):
     elif data_type == 'TimedWStringSeq':
         dt = RTC.TimedWStringSeq(RTC.Time(0,0),[])
         return dt, [str, sec, m_string]
+    else:
+        return None
     
 
 ##
@@ -1001,106 +1025,9 @@ def GetDataType(m_port):
 
     data_type = data_type.replace('RTC/','')
 
-    if data_type == 'TimedDouble':
-        dt = RTC.TimedDouble(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
-    elif data_type == 'TimedLong':
-        dt = RTC.TimedLong(RTC.Time(0,0),0)
-        return dt, [long, sig, m_value]
-    elif data_type == 'TimedFloat':
-        dt = RTC.TimedFloat(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
-    elif data_type == 'TimedInt':
-        dt = RTC.TimedInt(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
-    elif data_type == 'TimedShort':
-        dt = RTC.TimedShort(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
-    elif data_type == 'TimedUDouble':
-        dt = RTC.TimedUDouble(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
-    elif data_type == 'TimedULong':
-        dt = RTC.TimedULong(RTC.Time(0,0),0)
-        return dt, [long, sig, m_value]
-    elif data_type == 'TimedUFloat':
-        dt = RTC.TimedUFloat(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
-    elif data_type == 'TimedUInt':
-        dt = RTC.TimedUInt(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
-    elif data_type == 'TimedUShort':
-        dt = RTC.TimedUShort(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
-    elif data_type == 'TimedChar':
-        dt = RTC.TimedChar(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
-    elif data_type == 'TimedWChar':
-        dt = RTC.TimedWChar(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
-    elif data_type == 'TimedBoolean':
-        dt = RTC.TimedBoolean(RTC.Time(0,0),0)
-        return dt, [bool, sig, m_value]
-    elif data_type == 'TimedOctet':
-        dt = RTC.TimedOctet(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
-    elif data_type == 'TimedString':
-        dt = RTC.TimedString(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
-    elif data_type == 'TimedWString':
-        dt = RTC.TimedWString(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
-    elif data_type == 'TimedDoubleSeq':
-        dt = RTC.TimedDoubleSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
-    elif data_type == 'TimedLongSeq':
-        dt = RTC.TimedLongSeq(RTC.Time(0,0),[])
-        return dt, [long, sec, m_value]
-    elif data_type == 'TimedFloatSeq':
-        dt = RTC.TimedFloatSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
-    elif data_type == 'TimedIntSeq':
-        dt = RTC.TimedIntSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
-    elif data_type == 'TimedShortSeq':
-        dt = RTC.TimedShortSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
-    elif data_type == 'TimedUDoubleSeq':
-        dt = RTC.TimedUDoubleSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
-    elif data_type == 'TimedULongSeq':
-        dt = RTC.TimedULongSeq(RTC.Time(0,0),[])
-        return dt, [long, sec, m_value]
-    elif data_type == 'TimedUFloatSeq':
-        dt = RTC.TimedUFloatSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
-    elif data_type == 'TimedUIntSeq':
-        dt = RTC.TimedUIntSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
-    elif data_type == 'TimedUShortSeq':
-        dt = RTC.TimedUShortSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
-    elif data_type == 'TimedCharSeq':
-        dt = RTC.TimedCharSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
-    elif data_type == 'TimedWCharSeq':
-        dt = RTC.TimedWCharSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
-    elif data_type == 'TimedBooleanSeq':
-        dt = RTC.TimedBooleanSeq(RTC.Time(0,0),[])
-        return dt, [bool, sec, m_value]
-    elif data_type == 'TimedOctetSeq':
-        dt = RTC.TimedOctetSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
-    elif data_type == 'TimedStringSeq':
-        dt = RTC.TimedStringSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
-    elif data_type == 'TimedWStringSeq':
-        dt = RTC.TimedWStringSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
+    return GetDataSType(data_type)
+
     
-    
-    else:
-        return None
 
 
 
