@@ -1703,95 +1703,50 @@ def UpdateSaveSheet():
                     pass
                 
             count = 1
+            PortList = []
             for n,o in OOoRTC.calc_comp._OutPorts.items():
-                CN = 'A' + str(count)
-                try:
-                    cell = sheet.getCellRangeByName(CN)
-                    pn = ''
-                    for j in range(0, len(o._port_a[0])):
-                        if j == 0:
-                            pn = o._port_a[0][j]
-                        else:
-                            pn = pn + ':' + o._port_a[0][j]
-                    cell.String = str(pn)
-
-                    CN = 'B' + str(count)
-                    cell = sheet.getCellRangeByName(CN)
-                    cell.String = o._row
-
-                    CN = 'C' + str(count)
-                    cell = sheet.getCellRangeByName(CN)
-                    cell.String = o._col
-
-                    CN = 'D' + str(count)
-                    cell = sheet.getCellRangeByName(CN)
-                    cell.String = o._length
-
-                    CN = 'E' + str(count)
-                    cell = sheet.getCellRangeByName(CN)
-                    cell.String = o._sn
-
-                    CN = 'F' + str(count)
-                    cell = sheet.getCellRangeByName(CN)
-                    cell.String = str(o.state)
-
-                    CN = 'G' + str(count)
-                    cell = sheet.getCellRangeByName(CN)
-                    pn = ''
-                    tmp = 0
-                    
-                    for k,j in o.attachports.items():
-                        if tmp == 0:
-                            pn = j
-                        else:
-                            pn = pn + ':' + j
-                        tmp += 1
-                            
-                        
-                    cell.String = str(pn)
-                except:
-                    pass
-
-                count = count + 1
+                PortList.append(o)
             for n,i in OOoRTC.calc_comp._InPorts.items():
-                CN = 'A' + str(count)
+                PortList.append(i)
 
+            for p in PortList:
+                CN = 'A' + str(count)
                 try:
                     cell = sheet.getCellRangeByName(CN)
                     pn = ''
-                    for j in range(0, len(i._port_a[0])):
+                    for j in range(0, len(p._port_a[0])):
                         if j == 0:
-                            pn = i._port_a[0][j]
+                            pn = p._port_a[0][j]
                         else:
-                            pn = pn + ':' + i._port_a[0][j]
+                            pn = pn + ':' + p._port_a[0][j]
                     cell.String = str(pn)
 
                     CN = 'B' + str(count)
                     cell = sheet.getCellRangeByName(CN)
-                    cell.String = i._row
+                    cell.String = p._row
 
                     CN = 'C' + str(count)
                     cell = sheet.getCellRangeByName(CN)
-                    cell.String = i._col
+                    cell.String = p._col
 
                     CN = 'D' + str(count)
                     cell = sheet.getCellRangeByName(CN)
-                    cell.String = i._length
+                    cell.String = p._length
 
                     CN = 'E' + str(count)
                     cell = sheet.getCellRangeByName(CN)
-                    cell.String = i._sn
+                    cell.String = p._sn
 
                     CN = 'F' + str(count)
                     cell = sheet.getCellRangeByName(CN)
-                    cell.String = str(i.state)
+                    cell.String = str(p.state)
 
                     CN = 'G' + str(count)
                     cell = sheet.getCellRangeByName(CN)
                     pn = ''
                     tmp = 0
                     
-                    for k,j in i.attachports.items():
+                    for k,j in p.attachports.items():
                         if tmp == 0:
                             pn = j
                         else:
@@ -1800,11 +1755,11 @@ def UpdateSaveSheet():
                             
                         
                     cell.String = str(pn)
-                    
                 except:
                     pass
-                
+
                 count = count + 1
+            
         else:
             return
 
