@@ -124,7 +124,13 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.__constraints__.Blue", "0<=x<=255",
                   "conf.__constraints__.column", "1<=x<=1000",
                   "conf.__constraints__.port_type", "(DataInPort,DataOutPort)",
-                  "conf.__constraints__.data_type", "(TimedDouble,TimedLong,TimedFloat,TimedShort,TimedULong,TimedUShort,TimedChar,TimedWChar,TimedBoolean,TimedOctet,TimedString,TimedWString,TimedDoubleSeq,TimedLongSeq,TimedFloatSeq,TimedShortSeq,TimedULongSeq,TimedUShortSeq,TimedCharSeq,TimedWCharSeq,TimedOctetSeq,TimedStringSeq,TimedWStringSeq)",
+                  "conf.__constraints__.data_type", """(TimedDouble,TimedLong,TimedFloat,TimedShort,TimedULong,TimedUShort,TimedChar,TimedWChar,
+                                                    TimedBoolean,TimedOctet,TimedString,TimedWString,TimedDoubleSeq,TimedLongSeq,TimedFloatSeq,
+                                                    TimedShortSeq,TimedULongSeq,TimedUShortSeq,TimedCharSeq,TimedWCharSeq,TimedOctetSeq,TimedStringSeq,
+                                                    TimedWStringSeq,TimedRGBColour,TimedPoint2D,TimedVector2D,TimedPose2D,TimedVelocity2D,TimedAcceleration2D,
+                                                    TimedPoseVel2D,TimedSize2D,TimedGeometry2D,TimedCovariance2D,TimedPointCovariance2D,TimedCarlike,TimedSpeedHeading2D,
+                                                    TimedPoint3D,TimedVector3D,TimedOrientation3D,TimedPose3D,TimedVelocity3D,TimedAngularVelocity3D,TimedAcceleration3D,
+                                                    TimedAngularAcceleration3D,TimedPoseVel3D,TimedSize3D,TimedGeometry3D,TimedCovariance3D,TimedSpeedHeading3D,TimedOAP)""",
                   ""]
 
 ##
@@ -295,6 +301,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     sig = m_DataType.Single
     sec = m_DataType.Sequence
+    ext = m_DataType.Extend
 
     
     
@@ -310,9 +317,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
         if m_data_type[1] == sig:
             self._ConfOutPorts[name] = MyOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-        else:
+        elif m_data_type[1] == sec:
             self._ConfOutPorts[name] = MyOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-
+        elif m_data_type[1] == ext:
+            self._ConfOutPorts[name] = MyOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
 
   ##
   # コンフィギュレーションパラメータによりインポートを追加する関数
@@ -321,6 +329,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   def m_addConfInPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
     sig = m_DataType.Single
     sec = m_DataType.Sequence
+    ext = m_DataType.Extend
 
     
     
@@ -336,10 +345,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         #self._InPorts[name] = MyPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
         if m_data_type[1] == sig:
             self._ConfInPorts[name] = MyInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-        else:
+        elif m_data_type[1] == sec:
             self._ConfInPorts[name] = MyInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-
-
+        elif m_data_type[1] == ext:
+            self._ConfInPorts[name] = MyInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
         
         m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
                                           DataListener(self._ConfInPorts[name]))
@@ -355,6 +364,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     sig = m_DataType.Single
     sec = m_DataType.Sequence
+    ext = m_DataType.Extend
     
     m_data_o, m_data_type =  GetDataType(m_inport[1])
     
@@ -367,9 +377,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
         if m_data_type[1] == sig:
             self._OutPorts[name] = MyOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
-        else:
+        elif m_data_type[1] == sec:
             self._OutPorts[name] = MyOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
-        
+        elif m_data_type[1] == ext:
+            self._OutPorts[name] = MyOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
         
         
                 
@@ -388,6 +399,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   def m_addInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
     sig = m_DataType.Single
     sec = m_DataType.Sequence
+    ext = m_DataType.Extend
     
     m_data_i, m_data_type =  GetDataType(m_outport[1])
     
@@ -399,8 +411,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         #self._InPorts[name] = MyPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
         if m_data_type[1] == sig:
             self._InPorts[name] = MyInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
-        else:
+        elif m_data_type[1] == sec:
             self._InPorts[name] = MyInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
+        elif m_data_type[1] == ext:
+            self._InPorts[name] = MyInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
 
 
         
@@ -575,6 +589,12 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         op._num = int(op._col)
 
     for n,ip in self._ConfInPorts.items():
+        ip._num = int(ip._col)
+
+    for n,op in self._OutPorts.items():
+        op._num = int(op._col)
+
+    for n,ip in self._InPorts.items():
         ip._num = int(ip._col)
     
     return RTC.RTC_OK
@@ -826,6 +846,340 @@ class MyInPortSeq(MyPortObject):
             self._num = self._num + 1
 
 
+class MyInPortEx(MyPortObject):
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+    def putData(self, m_cal):
+        self.putIn(m_cal)
+
+    def updateIn(self, cell, b):
+        m_string = m_DataType.String
+        m_value = m_DataType.Value
+        m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
+        m_len = m_len + 1
+
+        count = [0]
+
+        if self.state:
+            self._num = self._num + 1
+
+        if self._dataType[3] == "TimedRGBColour":
+            if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.g, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.b, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedPoint2D":
+            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedVector2D":
+            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedPose2D":
+            if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedVelocity2D":
+            if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedAcceleration2D":
+            if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedPoseVel2D":
+            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedSize2D":
+            if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedGeometry2D":
+            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedCovariance2D":
+            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xt, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.yt, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.tt, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedPointCovariance2D":
+            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedCarlike":
+            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.steeringAngle, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedSpeedHeading2D":
+            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedPoint3D":
+            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedVector3D":
+            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedOrientation3D":
+            if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.p, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedPose3D":
+            if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.z, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.r, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.p, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.y, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedVelocity3D":
+            if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.vz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.vr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.vp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedAngularVelocity3D":
+            if self.putDataEx(b.avx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.avy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.avz, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedAcceleration3D":
+            if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.az, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedAngularAcceleration3D":
+            if self.putDataEx(b.aax, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.aay, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.aaz, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedPoseVel3D":
+            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.vz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.vr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.vp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedSize3D":
+            if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.h, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedGeometry3D":
+            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.size.h, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedCovariance3D":
+            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.xa, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.yz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.yr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.ya, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.zz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.za, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.rr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.rp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.ra, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.pa, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.aa, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedSpeedHeading3D":
+            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.direction.r, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.direction.p, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.direction.y, count, m_len, cell, m_value) == False:
+                return
+        if self._dataType[3] == "TimedOAP":
+            if self.putDataEx(b.orientation.vx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.vy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.vz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.vr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.vp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.orientation.va, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.approach.vx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.approach.vy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.approach.vz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.approach.vr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.approach.vp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.approach.va, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.vx, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.vy, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.vz, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.vr, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.vp, count, m_len, cell, m_value) == False:
+                return
+            if self.putDataEx(b.position.va, count, m_len, cell, m_value) == False:
+                return
+        
+        
+        
+        
+
+    def putDataEx(self, b, count, m_len, cell, d_type):
+        m_string = m_DataType.String
+        m_value = m_DataType.Value
+
+        if d_type == m_string:
+            cell.getCellByPosition(count[0], 0).String = b
+        elif d_type == m_value:
+            cell.getCellByPosition(count[0], 0).Value = b
+                    
+        count[0] += 1
+        if count[0] >= m_len:
+            return False
+        return True
+
         
 
 class MyOutPort(MyPortObject):
@@ -888,7 +1242,777 @@ class MyOutPortSeq(MyPortObject):
                     if self.state:
                         self._num = self._num + 1
 
+class MyOutPortEx(MyPortObject):
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+    def putData(self, m_cal):
         
+        m_string = m_DataType.String
+        m_value = m_DataType.Value
+        
+        
+
+        count = [0]
+
+        
+
+        cell, sheet = self.GetCell(m_cal)
+        
+
+        if cell != None:
+            val = self.putOut(cell, sheet, m_cal)
+            
+            if self._length == "":
+                val = [val]
+
+
+            if self._dataType[3] == "TimedRGBColour":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.r = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.g = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.b = ans
+                else:
+                    return
+            if self._dataType[3] == "TimedPoint2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.x = ans
+                else:
+                    return
+                
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.y = ans
+                else:
+                    return
+            if self._dataType[3] == "TimedVector2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.y = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedPose2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.heading = ans
+                else:
+                    return
+                     
+            if self._dataType[3] == "TimedVelocity2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.va = ans
+                else:
+                    return
+                    
+            if self._dataType[3] == "TimedAcceleration2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.ax = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.ay = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedPoseVel2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.heading = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.vx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.vy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.va = ans
+                else:
+                    return
+                    
+            if self._dataType[3] == "TimedSize2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.l = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.w = ans
+                else:
+                    return
+
+            if self._dataType[3] == "TimedGeometry2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.heading = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.size.l = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.size.w = ans
+                else:
+                    return
+            if self._dataType[3] == "TimedCovariance2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xt = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.yy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.yt = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.tt = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedPointCovariance2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.yy = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedCarlike":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.speed = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.steeringAngle = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedSpeedHeading2D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.speed = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.heading = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedPoint3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.z = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedVector3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.z = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedOrientation3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.r = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.p = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.y = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedPose3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.z = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.r = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.p = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.y = ans
+                else:
+                    return
+                    
+                
+            if self._dataType[3] == "TimedVelocity3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.vp = ans
+                else:
+                    return
+            if self._dataType[3] == "TimedAngularVelocity3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.avx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.avy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.avz = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedAcceleration3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.ax = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.ay = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.az = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedAngularAcceleration3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.aax = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.aay = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.aaz = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedPoseVel3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.z = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.orientation.r = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.orientation.p = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.orientation.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.vx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.vy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.vz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.vr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.vp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.velocities.va = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedSize3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.l = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.w = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.h = ans
+                else:
+                    return
+                    
+            if self._dataType[3] == "TimedGeometry3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.x = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.position.z = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.orientation.r = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.orientation.p = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pose.orientation.y = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.size.l = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.size.w = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.size.h = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedCovariance3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.xa = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.yy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.yz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.yr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.ya = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.zz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.za = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.rr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.rp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.ra = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.pa = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.aa = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedSpeedHeading3D":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.speed = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.direction.r = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.direction.p = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.direction.y = ans
+                else:
+                    return
+                
+            if self._dataType[3] == "TimedOAP":
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.vx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.vy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.vz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.vr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.vp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.orientation.va = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.approach.vx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.approach.vy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.approach.vz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.approach.vr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.approach.vp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.approach.va = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.vx = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.vy = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.vz = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.vr = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.vp = ans
+                else:
+                    return
+                ans = self.putDataEx(count, val, m_value)
+                if ans != None:
+                    self._data.data.position.va = ans
+                else:
+                    return
+            OpenRTM_aist.setTimestamp(self._data)
+            self._port.write()
+            if self.state:
+                self._num = self._num + 1
+
+            
+        
+        
+        
+        
+
+    def putDataEx(self, count, val, d_type):
+        
+        if count[0] < len(val):
+            count[0] += 1
+            return val[count[0]-1]
+        else:
+            return None
+
+    
 ##
 # データのタイプ
 ##
@@ -896,6 +2020,7 @@ class MyOutPortSeq(MyPortObject):
 class m_DataType:
     Single = 0
     Sequence = 1
+    Extend = 2
 
     String = 0
     Value = 1
@@ -905,106 +2030,188 @@ class m_DataType:
 def GetDataSType(data_type):
     sig = m_DataType.Single
     sec = m_DataType.Sequence
+    ext = m_DataType.Extend
 
     m_string = m_DataType.String
     m_value = m_DataType.Value
     
     if data_type == 'TimedDouble':
         dt = RTC.TimedDouble(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
+        return dt, [float, sig, m_value, data_type]
     elif data_type == 'TimedLong':
         dt = RTC.TimedLong(RTC.Time(0,0),0)
-        return dt, [long, sig, m_value]
+        return dt, [long, sig, m_value, data_type]
     elif data_type == 'TimedFloat':
         dt = RTC.TimedFloat(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
+        return dt, [float, sig, m_value, data_type]
     elif data_type == 'TimedInt':
         dt = RTC.TimedInt(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
+        return dt, [int, sig, m_value, data_type]
     elif data_type == 'TimedShort':
         dt = RTC.TimedShort(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
+        return dt, [int, sig, m_value, data_type]
     elif data_type == 'TimedUDouble':
         dt = RTC.TimedUDouble(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
+        return dt, [float, sig, m_value, data_type]
     elif data_type == 'TimedULong':
         dt = RTC.TimedULong(RTC.Time(0,0),0)
-        return dt, [long, sig, m_value]
+        return dt, [long, sig, m_value, data_type]
     elif data_type == 'TimedUFloat':
         dt = RTC.TimedUFloat(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value]
+        return dt, [float, sig, m_value, data_type]
     elif data_type == 'TimedUInt':
         dt = RTC.TimedUInt(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
+        return dt, [int, sig, m_value, data_type]
     elif data_type == 'TimedUShort':
         dt = RTC.TimedUShort(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
+        return dt, [int, sig, m_value, data_type]
     elif data_type == 'TimedChar':
         dt = RTC.TimedChar(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
+        return dt, [str, sig, m_string, data_type]
     elif data_type == 'TimedWChar':
         dt = RTC.TimedWChar(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
+        return dt, [str, sig, m_string, data_type]
     elif data_type == 'TimedBoolean':
         dt = RTC.TimedBoolean(RTC.Time(0,0),0)
-        return dt, [bool, sig, m_value]
+        return dt, [bool, sig, m_value, data_type]
     elif data_type == 'TimedOctet':
         dt = RTC.TimedOctet(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value]
+        return dt, [int, sig, m_value, data_type]
     elif data_type == 'TimedString':
         dt = RTC.TimedString(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
+        return dt, [str, sig, m_string, data_type]
     elif data_type == 'TimedWString':
         dt = RTC.TimedWString(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string]
+        return dt, [str, sig, m_string, data_type]
     elif data_type == 'TimedDoubleSeq':
         dt = RTC.TimedDoubleSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
+        return dt, [float, sec, m_value, data_type]
     elif data_type == 'TimedLongSeq':
         dt = RTC.TimedLongSeq(RTC.Time(0,0),[])
-        return dt, [long, sec, m_value]
+        return dt, [long, sec, m_value, data_type]
     elif data_type == 'TimedFloatSeq':
         dt = RTC.TimedFloatSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
+        return dt, [float, sec, m_value, data_type]
     elif data_type == 'TimedIntSeq':
         dt = RTC.TimedIntSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
+        return dt, [int, sec, m_value, data_type]
     elif data_type == 'TimedShortSeq':
         dt = RTC.TimedShortSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
+        return dt, [int, sec, m_value, data_type]
     elif data_type == 'TimedUDoubleSeq':
         dt = RTC.TimedUDoubleSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
+        return dt, [float, sec, m_value, data_type]
     elif data_type == 'TimedULongSeq':
         dt = RTC.TimedULongSeq(RTC.Time(0,0),[])
-        return dt, [long, sec, m_value]
+        return dt, [long, sec, m_value, data_type]
     elif data_type == 'TimedUFloatSeq':
         dt = RTC.TimedUFloatSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value]
+        return dt, [float, sec, m_value, data_type]
     elif data_type == 'TimedUIntSeq':
         dt = RTC.TimedUIntSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
+        return dt, [int, sec, m_value, data_type]
     elif data_type == 'TimedUShortSeq':
         dt = RTC.TimedUShortSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
+        return dt, [int, sec, m_value, data_type]
     elif data_type == 'TimedCharSeq':
         dt = RTC.TimedCharSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
+        return dt, [str, sec, m_string, data_type]
     elif data_type == 'TimedWCharSeq':
         dt = RTC.TimedWCharSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
+        return dt, [str, sec, m_string, data_type]
     elif data_type == 'TimedBooleanSeq':
         dt = RTC.TimedBooleanSeq(RTC.Time(0,0),[])
-        return dt, [bool, sec, m_value]
+        return dt, [bool, sec, m_value, data_type]
     elif data_type == 'TimedOctetSeq':
         dt = RTC.TimedOctetSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value]
+        return dt, [int, sec, m_value, data_type]
     elif data_type == 'TimedStringSeq':
         dt = RTC.TimedStringSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
+        return dt, [str, sec, m_string, data_type]
     elif data_type == 'TimedWStringSeq':
         dt = RTC.TimedWStringSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string]
+        return dt, [str, sec, m_string, data_type]
+    elif data_type == "TimedRGBColour":
+        dt = RTC.TimedRGBColour(RTC.Time(0,0),RTC.RGBColour(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedPoint2D":
+        dt = RTC.TimedPoint2D(RTC.Time(0,0),RTC.Point2D(0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedVector2D":
+        dt = RTC.TimedVector2D(RTC.Time(0,0),RTC.Vector2D(0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedPose2D":
+        dt = RTC.TimedPose2D(RTC.Time(0,0),RTC.Pose2D(RTC.Point2D(0,0),0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedVelocity2D":
+        dt = RTC.TimedVelocity2D(RTC.Time(0,0),RTC.Velocity2D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedAcceleration2D":
+        dt = RTC.TimedAcceleration2D(RTC.Time(0,0),RTC.Acceleration2D(0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedPoseVel2D":
+        dt = RTC.TimedPoseVel2D(RTC.Time(0,0),RTC.PoseVel2D(RTC.Pose2D(RTC.Point2D(0,0),0),RTC.Velocity2D(0,0,0)))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedSize2D":
+        dt = RTC.TimedSize2D(RTC.Time(0,0),RTC.Size2D(0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedGeometry2D":
+        dt = RTC.TimedGeometry2D(RTC.Time(0,0),RTC.Geometry2D(RTC.Point2D(0,0),RTC.Size2D(0,0)))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedCovariance2D":
+        dt = RTC.TimedCovariance2D(RTC.Time(0,0),RTC.Covariance2D(0,0,0,0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedPointCovariance2D":
+        dt = RTC.TimedPointCovariance2D(RTC.Time(0,0),RTC.PointCovariance2D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedCarlike":
+        dt = RTC.TimedCarlike(RTC.Time(0,0),RTC.Carlike(0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedSpeedHeading2D":
+        dt = RTC.TimedSpeedHeading2D(RTC.Time(0,0),RTC.SpeedHeading2D(0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedPoint3D":
+        dt = RTC.TimedPoint3D(RTC.Time(0,0),RTC.Point3D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedVector3D":
+        dt = RTC.TimedVector3D(RTC.Time(0,0),RTC.Vector3D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedOrientation3D":
+        dt = RTC.TimedOrientation3D(RTC.Time(0,0),RTC.Orientation3D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedPose3D":
+        dt = RTC.TimedPose3D(RTC.Time(0,0),RTC.Pose3D(RTC.Point3D(0,0,0), RTC.Orientation3D(0,0,0)))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedVelocity3D":
+        dt = RTC.TimedVelocity3D(RTC.Time(0,0),RTC.Velocity3D(0,0,0,0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedAngularVelocity3D":
+        dt = RTC.TimedAngularVelocity3D(RTC.Time(0,0),RTC.AngularVelocity3D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedAcceleration3D":
+        dt = RTC.TimedAcceleration3D(RTC.Time(0,0),RTC.Acceleration3D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedAngularAcceleration3D":
+        dt = RTC.TimedAngularAcceleration3D(RTC.Time(0,0),RTC.AngularAcceleration3D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedPoseVel3D":
+        dt = RTC.TimedPoseVel3D(RTC.Time(0,0),RTC.PoseVel3D(RTC.Pose3D(RTC.Point3D(0,0,0), RTC.Orientation3D(0,0,0)),RTC.Velocity3D(0,0,0,0,0,0)))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedSize3D":
+        dt = RTC.TimedSize3D(RTC.Time(0,0),RTC.Size3D(0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedGeometry3D":
+        dt = RTC.TimedGeometry3D(RTC.Time(0,0),RTC.Geometry3D(RTC.Pose3D(RTC.Point3D(0,0,0), RTC.Orientation3D(0,0,0)),RTC.Size3D(0,0,0)))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedCovariance3D":
+        dt = RTC.TimedCovariance3D(RTC.Time(0,0),RTC.Covariance3D(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedSpeedHeading3D":
+        dt = RTC.TimedSpeedHeading3D(RTC.Time(0,0),RTC.SpeedHeading3D(0,RTC.Orientation3D(0,0,0)))
+        return dt, [str, ext, m_value, data_type]
+    elif data_type == "TimedOAP":
+        dt = RTC.TimedOAP(RTC.Time(0,0),RTC.OAP(RTC.Velocity3D(0,0,0,0,0,0),RTC.Velocity3D(0,0,0,0,0,0),RTC.Velocity3D(0,0,0,0,0,0)))
+        return dt, [str, ext, m_value, data_type]
     else:
         return None
     
@@ -1014,8 +2221,7 @@ def GetDataSType(data_type):
 ##
         
 def GetDataType(m_port):
-    sig = m_DataType.Single
-    sec = m_DataType.Sequence
+    
 
     m_string = m_DataType.String
     m_value = m_DataType.Value
@@ -2185,14 +3391,16 @@ class DeleteListener( unohelper.Base, XActionListener ):
 
     def actionPerformed(self, actionEvent):
         objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
-        t_comp, nd = JudgePort(objectTree, self._paths)
+        
 
         if OOoRTC.calc_comp:
             ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
             
-        
+            
             if OOoRTC.calc_comp._InPorts.has_key(str(ptlist_control.Text)) == True:
+                
                 i = OOoRTC.calc_comp._InPorts[str(ptlist_control.Text)]
+                
                 OOoRTC.calc_comp.m_removeInComp(i)
                 DelPortTC(i, self.dlg_control)
                 return
@@ -2201,7 +3409,9 @@ class DeleteListener( unohelper.Base, XActionListener ):
                 OOoRTC.calc_comp.m_removeOutComp(o)
                 DelPortTC(o, self.dlg_control)
                 return
-            
+
+        t_comp, nd = JudgePort(objectTree, self._paths)
+        
         if t_comp:
             for n,o in OOoRTC.calc_comp._OutPorts.items():
                 if o._port_a[0] == t_comp[0]:
