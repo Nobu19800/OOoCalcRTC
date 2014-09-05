@@ -10,7 +10,7 @@ import re
 if os.name == 'posix':
     sys.path += ['./OOoRTC', './OOoRTC/CalcIDL', '/usr/lib/python2.6/dist-packages', '/usr/lib/python2.6/dist-packages/rtctree/rtmidl']
 elif os.name == 'nt':
-    sys.path += ['.\\OOoRTC', '.\\OOoRTC\\CalcIDL', 'C:\\Python26\\lib\\site-packages', 'C:\\Python26\\lib\\site-packages\\rtctree\\rtmidl']
+    sys.path += ['.\\OOoRTC', '.\\OOoRTC\\CalcIDL', 'C:\\Python26\\lib\\site-packages', 'C:\\Python26\\Lib\\site-packages\\OpenRTM_aist\\RTM_IDL', 'C:\\Python26\\lib\\site-packages\\rtctree\\rtmidl']
     
     
     
