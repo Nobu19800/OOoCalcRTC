@@ -1,19 +1,15 @@
 
 
-struct StringLine
-{
-	sequence<string> value;
-};
 
-typedef sequence<StringLine> StringList;
+typedef sequence<string> StringSeq;
+
+typedef sequence<StringSeq> StringList;
 
 
-struct ValueLine
-{
-	sequence<float> value;
-};
+typedef sequence<float> FloatSeq;
 
-typedef sequence<ValueLine> ValueList;
+
+typedef sequence<FloatSeq> FloatList;
 
 
 
@@ -26,7 +22,7 @@ module SpreadSheet {
 		void set_value(in string l, in string c, in string sn, in float v);
 
 		StringList get_string_range(in string l1, in string c1, in string l2, in string c2, in string sn);
-		void set_value_range(in string l, in string c, in string sn, in ValueList v);
+		void set_value_range(in string l, in string c, in string sn, in FloatList v);
 
 
 		void set_string(in string l, in string c, in string sn, in string v);
