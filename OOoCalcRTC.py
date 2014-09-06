@@ -2076,7 +2076,7 @@ def GetDataSType(data_type):
         return dt, [bool, sig, m_value, data_type]
     elif data_type == 'TimedOctet':
         dt = RTC.TimedOctet(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value, data_type]
+        return dt, [chr, sig, m_value, data_type]
     elif data_type == 'TimedString':
         dt = RTC.TimedString(RTC.Time(0,0),0)
         return dt, [str, sig, m_string, data_type]
@@ -2124,7 +2124,7 @@ def GetDataSType(data_type):
         return dt, [bool, sec, m_value, data_type]
     elif data_type == 'TimedOctetSeq':
         dt = RTC.TimedOctetSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value, data_type]
+        return dt, [chr, sec, m_value, data_type]
     elif data_type == 'TimedStringSeq':
         dt = RTC.TimedStringSeq(RTC.Time(0,0),[])
         return dt, [str, sec, m_string, data_type]
