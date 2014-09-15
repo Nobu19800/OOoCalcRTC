@@ -160,13 +160,13 @@ def SetCoding(m_str):
 class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
 
-    def __init__(self):
+    def __init__(self, m_comp):
 
-        pass
+        self.m_comp = m_comp
 
     def GetCell(self, l, c, sn):
-        if OOoRTC.calc_comp.calc.sheets.hasByName(sn):
-            sheet = OOoRTC.calc_comp.calc.sheets.getByName(sn)
+        if self.m_comp.calc.sheets.hasByName(sn):
+            sheet = self.m_comp.calc.sheets.getByName(sn)
             CN = l+c
             try:
                 cell = sheet.getCellRangeByName(CN)
@@ -180,10 +180,8 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     # string get_string(in string l, in string c, in string sn)
     def get_string(self, l, c, sn):
-        if OOoRTC.calc_comp:
-            cell, sheet = self.GetCell(l,c,sn)
-            if cell:
-                
+        cell, sheet = self.GetCell(l,c,sn)
+        if cell:
                 return str(cell.String)
 
         return "error"
@@ -193,11 +191,10 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     # void set_value(in string l, in string c, in string sn, in float v)
     def set_value(self, l, c, sn, v):
-        if OOoRTC.calc_comp:
-            cell, sheet = self.GetCell(l,c,sn)
-            if cell:
-                cell.Value = v
-                return
+        cell, sheet = self.GetCell(l,c,sn)
+        if cell:
+            cell.Value = v
+            return
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
         # *** Implement me
         # Must return: None
@@ -216,11 +213,10 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     # void set_string(in string l, in string c, in string sn, in string v)
     def set_string(self, l, c, sn, v):
-        if OOoRTC.calc_comp:
-            cell, sheet = self.GetCell(l,c,sn)
-            if cell:
-                cell.String = v
-                return
+        cell, sheet = self.GetCell(l,c,sn)
+        if cell:
+            cell.String = v
+            return
             
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
         # *** Implement me
@@ -251,7 +247,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self._ConfInPorts = {}
 
     self._SpreadSheetPort = OpenRTM_aist.CorbaPort("SpreadSheet")
-    self._spreadsheet = mSpreadSheet_i()
+    self._spreadsheet = mSpreadSheet_i(self)
 
     try:
       self.calc = OOoCalc()
