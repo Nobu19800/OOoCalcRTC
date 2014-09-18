@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+##
+#
+# @file OOoCalcRTC.py
+
 import optparse
 import sys,os,platform
 import re
@@ -137,10 +141,16 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   ""]
 
 ##
-# コンフィギュレーションパラメータが更新されたときのコールバック
-##
+# @class MyConfigUpdateParam
+# @brief コンフィギュレーションパラメータが更新されたときのコールバック
+#
 
 class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param m_comp OOoCalcRTC
+    #
    def __init__(self,e_rtc):
         self.m_rtc =  e_rtc
    def __call__(self, config_param_name):
@@ -149,24 +159,31 @@ class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
 
 
 
-##
-# サービスポートSpreadSheet
-##
 
+##
+# @class mSpreadSheet_i
+# @brief サービスポートSpreadSheet
+#
 class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
 
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param m_comp OOoCalcRTC
+    #
     def __init__(self, m_comp):
 
         self.m_comp = m_comp
 
     ##
-    # セルオブジェクト、シートオブジェクトの取得
-    # l：行番号
-    # c：列番号
-    # sn：シート名
-    # 戻り値：セルオブジェクト、シートオブジェクト
-    ##
+    # @brief セルオブジェクト、シートオブジェクトの取得
+    # @param self
+    # @param l 行番号
+    # @param c 列番号
+    # @param sn シート名
+    # @return セルオブジェクト、シートオブジェクト
+    #
 
     def GetCell(self, l, c, sn):
         if self.m_comp.calc.sheets.hasByName(sn):
@@ -183,12 +200,13 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
 
     ##
-    # セルの文字列を取得
-    # l：行番号
-    # c：列番号
-    # sn：シート名
-    # 戻り値：セルの文字列
-    ##
+    # @brief セルの文字列を取得
+    # @param self
+    # @param l 行番号
+    # @param c 列番号
+    # @param sn シート名
+    # @return セルの文字列
+    #
     def get_string(self, l, c, sn):
         cell, sheet = self.GetCell(l,c,sn)
         if cell:
@@ -199,11 +217,12 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
         
 
     ##
-    # セルの値を設定
-    # l：行番号
-    # c：列番号
-    # sn：シート名
-    # v：設定する値
+    # @brief セルの値を設定
+    # @param self
+    # @param l 行番号
+    # @param c 列番号
+    # @param sn シート名
+    # @param v 設定する値
     ##
     def set_value(self, l, c, sn, v):
         cell, sheet = self.GetCell(l,c,sn)
@@ -214,27 +233,28 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
         
 
     ##
-    # 未実装
-    ##
+    # @brief 未実装
+    #
     def get_string_range(self, l1, c1, l2, c2, sn):
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
         
 
     ##
-    #　未実装
-    ##
+    # @brief 未実装
+    #
     def set_value_range(self, l, c, sn, v):
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
         # *** Implement me
         # Must return: None
 
     ##
-    # セルの文字列を設定
-    # l：行番号
-    # c：列番号
-    # sn：シート名
-    # v：設定する文字列
-    ##
+    # @brief セルの文字列を設定
+    # @param self
+    # @param l 行番号
+    # @param c 列番号
+    # @param sn シート名
+    # @param v 設定する文字列
+    #
     def set_string(self, l, c, sn, v):
         cell, sheet = self.GetCell(l,c,sn)
         if cell:
@@ -246,8 +266,8 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
         # Must return: None
 
     ##
-    # 未実装
-    ##
+    # @brief 未実装
+    #
     def set_string_range(self, l, c, sn, v):
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
         # *** Implement me
@@ -257,9 +277,11 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
 
 
+
 ##
-# OpenOffice Calcを操作するためのRTCのクラス
-##
+# @class OOoCalcControl
+# @brief OpenOffice Calcを操作するためのRTCのクラス
+#
 
 class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   def __init__(self, manager):
@@ -294,33 +316,37 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     
     return
   ##
-  # 実行周期を設定する関数
-  # rate：実行周期
-  ##
+  # @brief 実行周期を設定する関数
+  # @param self
+  # @param rate：実行周期
+  #
 
   def m_setRate(self, rate):
       m_ec = self.get_owned_contexts()
       m_ec[0].set_rate(rate)
 
   ##
-  # 活性化するための関数
-  ##    
+  # @brief 活性化するための関数
+  # @param self
+  #    
 
   def m_activate(self):
       m_ec = self.get_owned_contexts()
       m_ec[0].activate_component(self._objref)
 
   ##
-  # 不活性化するための関数
-  ##
+  # @brief 不活性化するための関数
+  # @param self
+  #
 
   def m_deactivate(self):
       m_ec = self.get_owned_contexts()
       m_ec[0].deactivate_component(self._objref)
 
   ##
-  # コンフィギュレーションパラメータによりアウトポートを追加する関数
-  ##
+  # @brief コンフィギュレーションパラメータによりアウトポートを追加する関数
+  # @param self
+  #
 
   def m_addConfOutPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
 
@@ -348,8 +374,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             self._ConfOutPorts[name] = MyOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
 
   ##
-  # コンフィギュレーションパラメータによりインポートを追加する関数
-  ##
+  # @brief コンフィギュレーションパラメータによりインポートを追加する関数
+  # @param self
+  #
   
   def m_addConfInPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
     sig = m_DataType.Single
@@ -379,12 +406,13 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
                                           DataListener(self._ConfInPorts[name]))
 
   ##
-  # アウトポート追加の関数
-  # name：アウトポートの名前
-  # m_inport：接続するインポート
-  # row：データを書き込む行番号
-  # sn；接続するインポートのパス
-  ##
+  # @brief アウトポート追加の関数
+  # @param self
+  # @param name アウトポートの名前
+  # @param m_inport 接続するインポート
+  # @param row データを書き込む行番号
+  # @param sn 接続するインポートのパス
+  #
   def m_addOutPort(self, name, m_inport, row, col, mlen, sn, mstate, t_attachports):
 
     sig = m_DataType.Single
@@ -414,12 +442,13 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             
         
   ##
-  # インポート追加の関数
-  # name：インポートの名前
-  # m_inport：接続するアウトポート
-  # row：データを書き込む行番号
-  # sn；書き込むシート
-  ##
+  # @brief インポート追加の関数
+  # @param self
+  # @param name インポートの名前
+  # @param m_inport 接続するアウトポート
+  # @param row データを書き込む行番号
+  # @param sn 書き込むシート
+  #
         
   def m_addInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
     sig = m_DataType.Single
@@ -449,9 +478,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         
 
   ##
-  # アウトポート削除の関数
-  # outport：削除するアウトポート
-  ##
+  # @brief アウトポート削除の関数
+  # @param self
+  # @param outport 削除するアウトポート
+  #
   
   def m_removeOutComp(self, outport):
       outport._port.disconnect_all()
@@ -459,9 +489,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
       del self._OutPorts[outport._name]
 
   ##
-  # インポート削除の関数
-  # outport：削除するインポート
-  ##
+  # @brief インポート削除の関数
+  # @param self
+  # @param outport 削除するインポート
+  #
 
   def m_removeInComp(self, inport):
       inport._port.disconnect_all()
@@ -470,8 +501,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
   ##
-  # コンフィギュレーションパラメータが変更されたときに呼び出される関数
-  ##
+  # @brief コンフィギュレーションパラメータが変更されたときに呼び出される関数
+  # @param self
+  #
   
   def ConfigUpdate(self):
       
@@ -531,8 +563,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
                       
 
   ##
-  # 初期化処理用コールバック関数
-  ##
+  # @brief 初期化処理用コールバック関数
+  # @param self
+  #
   
   def onInitialize(self):
     OOoRTC.calc_comp = self
@@ -562,8 +595,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   
   ##
-  # 非活性化処理用コールバック関数
-  ##
+  # @brief 不活性化時のコールバック関数
+  # @param self
+  # @param ec_id
+  #
   
   def onDeactivated(self, ec_id):
 
@@ -626,8 +661,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
   ##
-  # 周期処理用コールバック関数
-  ##
+  # @brief 周期処理用コールバック関数
+  # @param self
+  # @param ec_id
+  #
   
   def onExecute(self, ec_id):
     
@@ -688,16 +725,19 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     
   ##
-  # 終了処理用コールバック関数
-  ##
+  # @brief 終了処理用コールバック関数
+  # @param self
+  # @param ec_id
+  #
   def on_shutdown(self, ec_id):
       OOoRTC.calc_comp = None
       return RTC.RTC_OK
 
 
 ##
-# 追加するポートのクラス
-##
+# @class MyPortObject
+# @brief 追加するポートのクラス
+#
 
 
 class MyPortObject:
@@ -821,7 +861,10 @@ class MyPortObject:
 
 
         return val
-        
+
+##
+# @class MyInPort
+#
 
 class MyInPort(MyPortObject):
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
@@ -845,7 +888,9 @@ class MyInPort(MyPortObject):
 
         
                     
-
+##
+# @class MyInPortSeq
+#
 class MyInPortSeq(MyPortObject):
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
@@ -870,7 +915,9 @@ class MyInPortSeq(MyPortObject):
         if self.state:
             self._num = self._num + 1
 
-
+##
+# @class MyInPortEx
+#
 class MyInPortEx(MyPortObject):
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
@@ -1206,7 +1253,9 @@ class MyInPortEx(MyPortObject):
         return True
 
         
-
+##
+# @class MyOutPort
+#
 class MyOutPort(MyPortObject):
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
@@ -1236,6 +1285,9 @@ class MyOutPort(MyPortObject):
                     if self.state:
                         self._num = self._num + 1
 
+##
+# @class MyOutPortSeq
+#
 class MyOutPortSeq(MyPortObject):
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
@@ -1267,6 +1319,9 @@ class MyOutPortSeq(MyPortObject):
                     if self.state:
                         self._num = self._num + 1
 
+##
+# @class MyOutPortEx
+#
 class MyOutPortEx(MyPortObject):
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
@@ -2039,8 +2094,8 @@ class MyOutPortEx(MyPortObject):
 
     
 ##
-# データのタイプ
-##
+# @brief データのタイプ
+#
 
 class m_DataType:
     Single = 0
@@ -2242,8 +2297,10 @@ def GetDataSType(data_type):
     
 
 ##
-# データ型を返す関数
-##
+# @brief データポートのデータ型を返す関数
+# @param m_port データポート
+# @return データオブジェクト、[データ型、データのタイプ、データ型の名前]
+#
         
 def GetDataType(m_port):
     
@@ -2271,22 +2328,22 @@ def GetDataType(m_port):
 
 
 ##
-# コンポーネントを活性化してCalcの操作を開始する関数
-##
+# @brief コンポーネントを活性化してCalcの操作を開始する関数
+#
 
 def Start():
     if OOoRTC.calc_comp:
         OOoRTC.calc_comp.m_activate()
 
 ##
-# コンポーネントを不活性化してCalcの操作を終了する関数
-##
+# @brief コンポーネントを不活性化してCalcの操作を終了する関数
+#
 def Stop():
     if OOoRTC.calc_comp:
         OOoRTC.calc_comp.m_deactivate()
 ##
-# コンポーネントの実行周期を設定する関数
-##
+# @brief コンポーネントの実行周期を設定する関数
+#
 
 def Set_Rate():
     if OOoRTC.calc_comp:
@@ -2320,8 +2377,9 @@ def Set_Rate():
       
       
 ##
-# データが書き込まれたときに呼び出されるコールバック関数
-##
+# @class DataListener
+# @brief データが書き込まれたときに呼び出されるコールバック関数
+#
 
 
 class DataListener(OpenRTM_aist.ConnectorDataListenerT):
@@ -2342,8 +2400,8 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
 
 
 ##
-#RTCをマネージャに登録する関数
-##
+# @brief RTCをマネージャに登録する関数
+#
 def OOoCalcControlInit(manager):
   profile = OpenRTM_aist.Properties(defaults_str=ooocalccontrol_spec)
   manager.registerFactory(profile,
@@ -2364,8 +2422,8 @@ def MyModuleInit(manager):
 
 
 ##
-# アウトポートを追加する関数
-##
+# @brief アウトポートを追加する関数
+#
 def CompAddOutPort(name, i_port, dlg_control):
     if OOoRTC.calc_comp != None:
         tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
@@ -2391,8 +2449,8 @@ def CompAddOutPort(name, i_port, dlg_control):
         
 
 ##
-# インポートを追加する関数
-##
+# @brief インポートを追加する関数
+#
 
 def CompAddInPort(name, o_port, dlg_control):
     if OOoRTC.calc_comp != None:
@@ -2413,8 +2471,8 @@ def CompAddInPort(name, o_port, dlg_control):
         OOoRTC.calc_comp.m_addInPort(name, o_port, row, col, mlen, sn, mst, {})
 
 ##
-# RTC起動の関数
-##
+# @brief RTC起動の関数
+#
 
 def createOOoCalcComp():
 
@@ -2455,8 +2513,11 @@ def createOOoCalcComp():
     return None
 
 ##
-# ポートを接続する関数
-##
+# @brief ポートを接続する関数
+# @param obj1 接続するデータポート
+# @param obj2 接続するデータポート
+# @param c_name コネクタ名
+#
 
 def m_addport(obj1, obj2, c_name):
 
@@ -2484,11 +2545,11 @@ def m_addport(obj1, obj2, c_name):
 
 
 ##
-# メッセージボックス表示の関数
-# title：ウインドウのタイトル
-# message：表示する文章
+# @brief メッセージボックス表示の関数
+# @param title ウインドウのタイトル
+# @param message 表示する文章
 # http://d.hatena.ne.jp/kakurasan/20100408/p1のソースコード(GPLv2)の一部
-##
+#
 
 def MyMsgBox(title, message):
     try:
@@ -2499,9 +2560,9 @@ def MyMsgBox(title, message):
 
 
 ##
-# OpenOfficeを操作するためのクラス
+# @brief OpenOfficeを操作するためのクラス
 # http://d.hatena.ne.jp/kakurasan/20100408/p1のソースコード(GPLv2)の一部
-##
+#
 
 class Bridge(object):
   def __init__(self):
@@ -2516,8 +2577,10 @@ class Bridge(object):
     msgbox.dispose()
 
 ##
-# ネーミングサービスへ接続する関数
-##
+# @brief ネーミングサービスへ接続する関数
+# @param s_name
+# @param orb
+#
 def SetNamingServer(s_name, orb):
     
     try:
@@ -2528,10 +2591,11 @@ def SetNamingServer(s_name, orb):
     return namingserver
 
 ##
-# ツリーで選択したアイテムがポートかどうか判定する関数
-# objectTree：ダイアログのツリー
-# _path：ポートのパスのリスト
-##
+# @brief ツリーで選択したアイテムがポートかどうか判定する関数
+# @param objectTree ダイアログのツリー
+# @param _path ポートのパスのリスト
+#
+
 
 def JudgePort(objectTree, _paths):
     m_list = []
@@ -2574,8 +2638,8 @@ def JudgePort(objectTree, _paths):
 
 
 ##
-# 各RTCのパスを取得する関数
-##
+# @brief 各RTCのパスを取得する関数
+#
 def ListRecursive(context, rtclist, name, oParent, oTreeDataModel):
     
     m_blLength = 100
@@ -2661,8 +2725,8 @@ def rtc_get_rtclist(naming, rtclist, name, oParent, oTreeDataModel):
 
                        
 ##
-# ポートのパスのリストを取得する関数
-##
+# @brief ポートのパスのリストを取得する関数
+#
 def getPathList(name):
     if OOoRTC.mgr != None:
         orb = OOoRTC.mgr._orb
@@ -2675,8 +2739,8 @@ def getPathList(name):
     return None
 
 ##
-# ダイアログのツリーにネーミングサーバーのオブジェクトを登録する関数
-##
+# @brief ダイアログのツリーにネーミングサーバーのオブジェクトを登録する関数
+#
 
 def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
     oTree = dlg_control.getControl( m_ControlName.RTCTreeName )
@@ -2746,9 +2810,9 @@ def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
 
 
 ##
-# OpenOffice Calcを操作するためのクラス
+# @brief OpenOffice Calcを操作するためのクラス
 # http://d.hatena.ne.jp/kakurasan/20100408/p1のソースコード(GPLv2)の一部
-##
+#
 
 class OOoCalc(Bridge):
   def __init__(self):
@@ -2775,8 +2839,8 @@ class OOoCalc(Bridge):
 
 
 ##
-# 読み込んだ保存用シートからポートを作成する関数
-##
+# @brief 読み込んだ保存用シートからポートを作成する関数
+#
 
 def LoadSheet():
     
@@ -2874,8 +2938,8 @@ def LoadSheet():
 
 
 ##
-# 作成したポートの設定を保存する関数
-##
+# @brief 作成したポートの設定を保存する関数
+#
                 
 
 def UpdateSaveSheet():
@@ -2982,8 +3046,8 @@ def UpdateSaveSheet():
             return
 
 ##
-# ツリーの選択位置が変わったときに各テキストボックスの内容を変更する関数
-##
+# @brief ツリーの選択位置が変わったときに各テキストボックスの内容を変更する関数
+#
 
 def UpdateTree(dlg_control, m_port):
     
@@ -3014,8 +3078,8 @@ def UpdateTree(dlg_control, m_port):
     UpdateAttachPort(dlg_control, m_port)
 
 ##
-#データポートのリストを更新する関数
-##
+# @brief データポートのリストを更新する関数
+#
 
 def UpdateDataPortList(dlg_control):
     if OOoRTC.calc_comp:
@@ -3032,8 +3096,8 @@ def UpdateDataPortList(dlg_control):
 
             
 ##
-# インポートのリストを更新する関数
-##
+# @brief インポートのリストを更新する関数
+#
 def UpdateInPortList(dlg_control):
     
     if OOoRTC.calc_comp:
@@ -3053,8 +3117,8 @@ def UpdateInPortList(dlg_control):
 
 
 ##
-# 関連付けしたポートのリストを更新する関数
-##
+# @brief 関連付けしたポートのリストを更新する関数
+#
 def UpdateAttachPort(dlg_control, m_port):
     
     ipcb_control = dlg_control.getControl( m_ControlName.AttachCBName )
@@ -3068,8 +3132,8 @@ def UpdateAttachPort(dlg_control, m_port):
     
 
 ##
-# ポートを削除したときに各テキストボックスを変更する関数
-##
+# @brief ポートを削除したときに各テキストボックスを変更する関数
+#
 def ClearInfo(dlg_control):
     
     ffcol_control = dlg_control.getControl( m_ControlName.InfoTName )
@@ -3084,8 +3148,9 @@ def ClearInfo(dlg_control):
 
 
 ##
-# データポートリストのコールバック
-##
+# @class PortListListener
+# @brief データポートリストのコールバック
+#
 class PortListListener(unohelper.Base, XTextListener):
     def __init__(self, dlg_control):
         self.dlg_control = dlg_control
@@ -3103,8 +3168,8 @@ class PortListListener(unohelper.Base, XTextListener):
         
 
 ##
-# ポート関連付けの関数
-##
+# @brief ポート関連付けの関数
+#
 def AttachTC(dlg_control, m_port):
     
     tfcol_control = dlg_control.getControl( m_ControlName.InPortCBName )
@@ -3128,8 +3193,9 @@ def AttachTC(dlg_control, m_port):
         
 
 ##
-# ポート関連付けボタンのコールバック
-##
+# @class AttachListener
+# @brief ポート関連付けボタンのコールバック
+#
 class AttachListener( unohelper.Base, XActionListener):
     def __init__(self, dlg_control, _paths):
         self._paths = _paths
@@ -3171,8 +3237,8 @@ class AttachListener( unohelper.Base, XActionListener):
 
 
 ##
-# ポート関連付けの関数
-##
+# @brief ポート関連付けの関数
+#
 def DetachTC(dlg_control, m_port):
     tfcol_control = dlg_control.getControl( m_ControlName.AttachCBName )
     iname = str(tfcol_control.Text)
@@ -3192,8 +3258,9 @@ def DetachTC(dlg_control, m_port):
                     
 
 ##
-# ポート関連付け解除ボタンのコールバック
-##
+# @class DetachListener
+# @brief ポート関連付け解除ボタンのコールバック
+#
 class DetachListener( unohelper.Base, XActionListener):
     def __init__(self, dlg_control, _paths):
         
@@ -3229,8 +3296,8 @@ class DetachListener( unohelper.Base, XActionListener):
         MyMsgBox(OOoRTC.SetCoding('エラー','utf-8'),OOoRTC.SetCoding('削除済みです','utf-8'))
 
 ##
-# ポートのパラメータを設定する関数
-##
+# @brief ポートのパラメータを設定する関数
+#
 
 def SetPortParam(m_port, dlg_control):
     objectControlRow = dlg_control.getControl( m_ControlName.RowFName )
@@ -3251,8 +3318,9 @@ def SetPortParam(m_port, dlg_control):
     UpdateSaveSheet()
 
 ##
-# ポート作成ボタンのコールバック
-##
+# @class CreatePortListener
+# @brief ポート作成ボタンのコールバック
+#
 class CreatePortListener( unohelper.Base, XActionListener):
     def __init__(self, dlg_control, _paths):
         self.nCount = 0
@@ -3325,8 +3393,9 @@ class CreatePortListener( unohelper.Base, XActionListener):
             MyMsgBox(OOoRTC.SetCoding('エラー','utf-8'),OOoRTC.SetCoding('データポートではありません','utf-8'))
         
 ##
-# ツリー作成ボタンのコールバック
-##
+# @class SetRTCTreeListener
+# @brief ツリー作成ボタンのコールバック
+#
 
 class SetRTCTreeListener( unohelper.Base, XActionListener ):
     def __init__(self, oTreeModel, smgr, ctx, dlg_control):
@@ -3343,8 +3412,9 @@ class SetRTCTreeListener( unohelper.Base, XActionListener ):
 
 
 ##
-# ツリーのマウスでの操作に対するコールバック
-##
+# @class MySelectListener
+# @brief ツリーのマウスでの操作に対するコールバック
+#
 
 class MySelectListener( unohelper.Base, XSelectionChangeListener):
     def __init__(self, dlg_control, _paths):
@@ -3376,8 +3446,8 @@ class MySelectListener( unohelper.Base, XSelectionChangeListener):
 
 
 ##
-# ポートの削除の関数
-##
+# @brief ポートの削除の関数
+#
 def DelPortTC(m_port, dlg_control):
     ClearInfo(dlg_control)
     MyMsgBox('',OOoRTC.SetCoding('削除しました','utf-8'))
@@ -3387,8 +3457,9 @@ def DelPortTC(m_port, dlg_control):
     ptlist_control.Text = ""
 
 ##
-# ポート削除ボタンのコールバック
-##
+# @class DeleteListener
+# @brief ポート削除ボタンのコールバック
+#
             
 class DeleteListener( unohelper.Base, XActionListener ):
     def __init__(self, dlg_control, _paths):
@@ -3438,8 +3509,9 @@ class DeleteListener( unohelper.Base, XActionListener ):
         MyMsgBox(OOoRTC.SetCoding('エラー','utf-8'),OOoRTC.SetCoding('削除済みです','utf-8'))
 
 ##
-# データを書き込む列の初期化ボタンのコールバック
-##
+# @class SetColListener
+# @brief データを書き込む列の初期化ボタンのコールバック
+#
 
 class SetColListener( unohelper.Base, XActionListener ):
     def __init__(self, dlg_control, _paths):
@@ -3469,8 +3541,9 @@ class SetColListener( unohelper.Base, XActionListener ):
         MyMsgBox(OOoRTC.SetCoding('エラー','utf-8'),OOoRTC.SetCoding('削除済みです','utf-8'))
 
 ##
-# データを書き込む列を全て初期化するボタンのコールバック
-##
+# @class SetColListener
+# @brief データを書き込む列を全て初期化するボタンのコールバック
+#
 
 class SetAllColListener( unohelper.Base, XActionListener ):
     def __init__(self, dlg_control):
@@ -3486,8 +3559,8 @@ class SetAllColListener( unohelper.Base, XActionListener ):
             
         
 ##
-# ダイアログ作成の関数
-##
+# @brief ダイアログ作成の関数
+#
             
 def SetDialog():
     dialog_name = "OOoCalcControlRTC.RTCTreeDialog"
