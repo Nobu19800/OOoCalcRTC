@@ -428,7 +428,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param m_inport 接続するインポート
   # @param row データを書き込む行番号
   # @param sn 接続するインポートのパス
-  #
+  # @return 
   def m_addOutPort(self, name, m_inport, row, col, mlen, sn, mstate, t_attachports):
 
     sig = m_DataType.Single
@@ -451,7 +451,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         elif m_data_type[1] == ext:
             self._OutPorts[name] = MyOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
         
-        
+        return self._OutPorts[name]
+
+    return None
                 
     
 
@@ -464,7 +466,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param m_inport 接続するアウトポート
   # @param row データを書き込む行番号
   # @param sn 書き込むシート
-  #
+  # @return 
         
   def m_addInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
     sig = m_DataType.Single
@@ -490,6 +492,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         
         m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
                                           DataListener(self._InPorts[name]))
+
+        return self._InPorts[name]
+
+    return None
         
         
 
@@ -3088,8 +3094,9 @@ def CompAddOutPort(name, i_port, dlg_control):
 
         
         
-        OOoRTC.calc_comp.m_addOutPort(name, i_port, row, col, mlen, sn, mst, {})
-        
+        tcomp = OOoRTC.calc_comp.m_addOutPort(name, i_port, row, col, mlen, sn, mst, {})
+        if tcomp:
+            tcomp.update_cellName(OOoRTC.calc_comp)
 
 ##
 # @brief インポートを追加する関数
@@ -3112,7 +3119,9 @@ def CompAddInPort(name, o_port, dlg_control):
         mst = True
         if mstate == 0:
             mst = False
-        OOoRTC.calc_comp.m_addInPort(name, o_port, row, col, mlen, sn, mst, {})
+        tcomp = OOoRTC.calc_comp.m_addInPort(name, o_port, row, col, mlen, sn, mst, {})
+        if tcomp:
+            tcomp.update_cellName(OOoRTC.calc_comp)
 
 ##
 # @brief RTC起動の関数
@@ -3605,7 +3614,7 @@ def LoadSheet():
 def UpdateSaveSheet():
     
     if OOoRTC.calc_comp:
-        OOoRTC.calc_comp.update_cellName()
+        #OOoRTC.calc_comp.update_cellName()
         try:
           calc = OOoCalc()
         except NotOOoCalcException:
@@ -4005,6 +4014,7 @@ def SetPortParam(m_port, dlg_control):
     m_port._sn = str(Stf.Text)
     m_port._col = int(cfcol_control.Text)
     m_port._length = str(mlen_control.Text)
+    m_port.update_cellName(OOoRTC.calc_comp)
     mstate = int(cb_control.State)
     if mstate == 0:
         m_port.state = False
