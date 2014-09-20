@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+
 ##
+#   @file OOoCalcRTC.py
 #
-# @file OOoCalcRTC.py
 
 import optparse
 import sys,os,platform
@@ -70,6 +71,10 @@ import SpreadSheet, SpreadSheet__POA
 imp_id = "OOoCalcControl"# + str(comp_num)
 
 
+##
+# @class m_ControlName
+# @brief ウィジェット名
+#
 class m_ControlName:
     NameServerFName = "nameserver"
     CreateBName = "CreateButton"
@@ -149,10 +154,16 @@ class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
     ##
     # @brief コンストラクタ
     # @param self
-    # @param m_comp OOoCalcRTC
+    # @param e_rtc OOoCalcRTC
     #
    def __init__(self,e_rtc):
         self.m_rtc =  e_rtc
+
+    ##
+    # @brief 
+    # @param self
+    # @param config_param_name
+    #
    def __call__(self, config_param_name):
         self.m_rtc.ConfigUpdate()
 
@@ -284,6 +295,11 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 #
 
 class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
+
+    ##
+    # @brief コンストラクタ
+    # @param manager
+    #
   def __init__(self, manager):
     OpenRTM_aist.DataFlowComponentBase.__init__(self, manager)
     self.Num = 0
@@ -565,6 +581,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   ##
   # @brief 初期化処理用コールバック関数
   # @param self
+  # @return 
   #
   
   def onInitialize(self):
@@ -598,6 +615,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @brief 不活性化時のコールバック関数
   # @param self
   # @param ec_id
+  # @return 
   #
   
   def onDeactivated(self, ec_id):
@@ -664,6 +682,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @brief 周期処理用コールバック関数
   # @param self
   # @param ec_id
+  # @return 
   #
   
   def onExecute(self, ec_id):
@@ -728,10 +747,32 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @brief 終了処理用コールバック関数
   # @param self
   # @param ec_id
+  # @return 
   #
   def on_shutdown(self, ec_id):
       OOoRTC.calc_comp = None
       return RTC.RTC_OK
+
+
+  ##
+  # @brief データポートと関連付けしたセルに名前を入力
+  # @param self
+  #
+  def update_cellName(self):
+      for n,op in self._ConfOutPorts.items():
+        op.update_cellName(self)
+            
+      for n,ip in self._ConfInPorts.items():
+        ip.update_cellName(self)
+
+
+            
+    
+      for n,op in self._OutPorts.items():
+        op.update_cellName(self)
+            
+      for n,ip in self._InPorts.items():
+        ip.update_cellName(self)
 
 
 ##
@@ -741,6 +782,21 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
 class MyPortObject:
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param port
+    # @param data
+    # @param name
+    # @param row
+    # @param col
+    # @param mlen
+    # @param sn
+    # @param mstate
+    # @param port_a
+    # @param m_dataType
+    # @param t_attachports
+    #
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         
         self._port = port
@@ -764,11 +820,391 @@ class MyPortObject:
         self._col = col
 
         self._mutex = threading.RLock()
-        
 
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal
+    def update_cellName(self, m_cal):
+        if m_cal.calc.sheets.hasByName(self._sn):
+            sheet = m_cal.calc.sheets.getByName(self._sn)
+            if self._length == "":
+                CN = self._row + str(self._col)
+            else:
+                CN = self._row + str(self._col) + ':' + self._length + str(self._col)
+            try:
+                cell = sheet.getCellRangeByName(CN)
+                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
+                m_len = m_len + 1
+
+                self.update_cellNameSub(cell, m_len)
+
+                
+                            
+            except:
+                return
+
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param m_len
+    def update_cellNameSub(self, cell, m_len):
+        pass
+
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param m_len
+    def update_cellNameSingle(self, cell, m_len):
+        cell.getCellByPosition(0, 0).String = self._name
+
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param m_len
+    def update_cellNameSeq(self, cell, m_len):
+        for j in range(0, m_len):
+            cell.getCellByPosition(j, 0).String = self._name + ":" + str(j)
+
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param m_len
+    def update_cellNameEx(self, cell, m_len):
+        b = self._name + ":"
+        count = [0]
+        if self._dataType[3] == "TimedRGBColour":
+            if self.input_cellNameEx(b + str("r"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("g"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("b"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedPoint2D":
+            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedVector2D":
+            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedPose2D":
+            if self.input_cellNameEx(b + str("position.x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("heading"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedVelocity2D":
+            if self.input_cellNameEx(b + str("vx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("vy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("va"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedAcceleration2D":
+            if self.input_cellNameEx(b + str("ax"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("ay"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedPoseVel2D":
+            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.heading"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.vx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.vy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.va"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedSize2D":
+            if self.input_cellNameEx(b + str("l"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("w"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedGeometry2D":
+            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.heading"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("size.l"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("size.w"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedCovariance2D":
+            if self.input_cellNameEx(b + str("xx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xt"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("yy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("yt"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("tt"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedPointCovariance2D":
+            if self.input_cellNameEx(b + str("xx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("yy"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedCarlike":
+            if self.input_cellNameEx(b + str("speed"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("steeringAngle"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedSpeedHeading2D":
+            if self.input_cellNameEx(b + str("speed"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("heading"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedPoint3D":
+            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("z"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedVector3D":
+            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("z"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedOrientation3D":
+            if self.input_cellNameEx(b + str("r"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("p"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedPose3D":
+            if self.input_cellNameEx(b + str("position.x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.z"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.r"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.p"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.y"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedVelocity3D":
+            if self.input_cellNameEx(b + str("vx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("vy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("vz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("vr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("vp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("va"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedAngularVelocity3D":
+            if self.input_cellNameEx(b + str("avx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("avy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("avz"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedAcceleration3D":
+            if self.input_cellNameEx(b + str("ax"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("ay"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("az"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedAngularAcceleration3D":
+            if self.input_cellNameEx(b + str("aax"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("aay"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("aaz"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedPoseVel3D":
+            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.position.z"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.orientation.r"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.orientation.p"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.orientation.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.vx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.vy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.vz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.vr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.vp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("velocities.va"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedSize3D":
+            if self.input_cellNameEx(b + str("l"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("w"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("h"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedGeometry3D":
+            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.position.z"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.orientation.r"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.orientation.p"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pose.orientation.y"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("size.l"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("size.w"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("size.h"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedCovariance3D":
+            if self.input_cellNameEx(b + str("xx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("xa"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("yy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("yz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("yr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("ya"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("zz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("za"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("rr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("rp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("ra"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("pa"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("aa"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedSpeedHeading3D":
+            if self.input_cellNameEx(b + str("speed"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("direction.r"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("direction.p"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("direction.y"), count, m_len, cell) == False:
+                return
+        if self._dataType[3] == "TimedOAP":
+            if self.input_cellNameEx(b + str("orientation.vx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.vy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.vz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.vr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.vp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("orientation.va"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("approach.vx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("approach.vy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("approach.vz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("approach.vr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("approach.vp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("approach.va"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.vx"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.vy"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.vz"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.vr"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.vp"), count, m_len, cell) == False:
+                return
+            if self.input_cellNameEx(b + str("position.va"), count, m_len, cell) == False:
+                return
+
+    ##
+    # @brief 
+    # @param self
+    # @param b
+    # @param count
+    # @param m_len
+    # @param cell
+    # @return 
+    def input_cellNameEx(self, b, count, m_len, cell):
+        
+        cell.getCellByPosition(count[0], 0).String = b
+        
+                    
+        count[0] += 1
+        if count[0] >= m_len:
+            return False
+        return True
+            
+
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal
     def putData(self, m_cal):
         pass
 
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal
     def GetCell(self, m_cal):
         if m_cal.calc.sheets.hasByName(self._sn):
             sheet = m_cal.calc.sheets.getByName(self._sn)
@@ -786,9 +1222,18 @@ class MyPortObject:
         else:
             return None
 
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param b
     def updateIn(self, cell, b):
         pass
 
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal
     def putIn(self, m_cal):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -820,7 +1265,12 @@ class MyPortObject:
 
         
                     
-                    
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param sheet
+    # @param m_cal
     def putOut(self, cell, sheet, m_cal):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -864,15 +1314,40 @@ class MyPortObject:
 
 ##
 # @class MyInPort
+# @brief
 #
 
 class MyInPort(MyPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param port
+    # @param data
+    # @param name
+    # @param row
+    # @param col
+    # @param mlen
+    # @param sn
+    # @param mstate
+    # @param port_a
+    # @param m_dataType
+    # @param t_attachports
+    #
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal
     def putData(self, m_cal):
         self.putIn(m_cal)
 
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param b
     def updateIn(self, cell, b):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -886,18 +1361,50 @@ class MyInPort(MyPortObject):
         if self.state:
             self._num = self._num + 1
 
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param m_len
+    def update_cellNameSub(self, cell, m_len):
+        self.update_cellNameSingle(cell, m_len)
+
         
                     
 ##
 # @class MyInPortSeq
-#
+# @brief 
 class MyInPortSeq(MyPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param port
+    # @param data
+    # @param name
+    # @param row
+    # @param col
+    # @param mlen
+    # @param sn
+    # @param mstate
+    # @param port_a
+    # @param m_dataType
+    # @param t_attachports
+    #
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal
     def putData(self, m_cal):
         self.putIn(m_cal)
 
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param b
     def updateIn(self, cell, b):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -915,16 +1422,56 @@ class MyInPortSeq(MyPortObject):
         if self.state:
             self._num = self._num + 1
 
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param m_len
+    def update_cellNameSub(self, cell, m_len):
+        self.update_cellNameSeq(cell, m_len)
+
 ##
 # @class MyInPortEx
-#
+# @brief 
 class MyInPortEx(MyPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param port
+    # @param data
+    # @param name
+    # @param row
+    # @param col
+    # @param mlen
+    # @param sn
+    # @param mstate
+    # @param port_a
+    # @param m_dataType
+    # @param t_attachports
+    #
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal
     def putData(self, m_cal):
         self.putIn(m_cal)
 
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param m_len
+    def update_cellNameSub(self, cell, m_len):
+        self.update_cellNameEx(cell, m_len)
+
+    ##
+    # @brief 
+    # @param self
+    # @param cell
+    # @param b
     def updateIn(self, cell, b):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1238,6 +1785,13 @@ class MyInPortEx(MyPortObject):
         
         
 
+    ##
+    # @brief 
+    # @param b
+    # @param count
+    # @param m_len
+    # @param cell
+    # @param d_type
     def putDataEx(self, b, count, m_len, cell, d_type):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1255,11 +1809,29 @@ class MyInPortEx(MyPortObject):
         
 ##
 # @class MyOutPort
-#
+# @brief 
 class MyOutPort(MyPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param port
+    # @param data
+    # @param name
+    # @param row
+    # @param col
+    # @param mlen
+    # @param sn
+    # @param mstate
+    # @param port_a
+    # @param m_dataType
+    # @param t_attachports
+    #
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
+    ##
+    # @brief 
+    # @param m_cal
     def putData(self, m_cal):
         cell, sheet = self.GetCell(m_cal)
 
@@ -1285,13 +1857,38 @@ class MyOutPort(MyPortObject):
                     if self.state:
                         self._num = self._num + 1
 
+    ##
+    # @brief 
+    # @param cell
+    # @param m_len
+    def update_cellNameSub(self, cell, m_len):
+        self.update_cellNameSingle(cell, m_len)
+
 ##
 # @class MyOutPortSeq
-#
+# @brief 
 class MyOutPortSeq(MyPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param port
+    # @param data
+    # @param name
+    # @param row
+    # @param col
+    # @param mlen
+    # @param sn
+    # @param mstate
+    # @param port_a
+    # @param m_dataType
+    # @param t_attachports
+    #
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
+    ##
+    # @brief 
+    # @param m_cal
     def putData(self, m_cal):
         cell, sheet = self.GetCell(m_cal)
 
@@ -1319,13 +1916,31 @@ class MyOutPortSeq(MyPortObject):
                     if self.state:
                         self._num = self._num + 1
 
+    ##
+    # @brief 
+    # @param cell
+    # @param m_len
+    def update_cellNameSub(self, cell, m_len):
+        self.update_cellNameSeq(cell, m_len)
+
 ##
 # @class MyOutPortEx
+# @brief 
 #
 class MyOutPortEx(MyPortObject):
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
+    ##
+    # @brief 
+    # @param cell
+    # @param m_len
+    def update_cellNameSub(self, cell, m_len):
+        self.update_cellNameEx(cell, m_len)
+
+    ##
+    # @brief 
+    # @param m_cal
     def putData(self, m_cal):
         
         m_string = m_DataType.String
@@ -2083,7 +2698,11 @@ class MyOutPortEx(MyPortObject):
         
         
         
-
+    ##
+    # @brief 
+    # @param count
+    # @param val
+    # @param d_type
     def putDataEx(self, count, val, d_type):
         
         if count[0] < len(val):
@@ -2094,6 +2713,7 @@ class MyOutPortEx(MyPortObject):
 
     
 ##
+# @class m_DataType
 # @brief データのタイプ
 #
 
@@ -2107,6 +2727,11 @@ class m_DataType:
     def __init__(self):
         pass
 
+
+##
+# @brief
+# @param data_type
+# @return 
 def GetDataSType(data_type):
     sig = m_DataType.Single
     sec = m_DataType.Sequence
@@ -2383,12 +3008,26 @@ def Set_Rate():
 
 
 class DataListener(OpenRTM_aist.ConnectorDataListenerT):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param m_port
+    #
   def __init__(self, m_port):
     self.m_port = m_port
 
+    ##
+    # @brief デストラクタ
+    # @param self
+    #
   def __del__(self):
     pass
 
+    ##
+    # @brief
+    # @param self
+    # @param info
+    # @param cdrdata
   def __call__(self, info, cdrdata):
     data = OpenRTM_aist.ConnectorDataListenerT.__call__(self, info, cdrdata, self.m_port._data)
 
@@ -2401,7 +3040,7 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
 
 ##
 # @brief RTCをマネージャに登録する関数
-#
+# @param manager
 def OOoCalcControlInit(manager):
   profile = OpenRTM_aist.Properties(defaults_str=ooocalccontrol_spec)
   manager.registerFactory(profile,
@@ -2410,7 +3049,9 @@ def OOoCalcControlInit(manager):
   
 
 
-
+##
+# @brief 
+# @param manager
 def MyModuleInit(manager):
   manager._factory.unregisterObject(imp_id)
   OOoCalcControlInit(manager)
@@ -2423,7 +3064,9 @@ def MyModuleInit(manager):
 
 ##
 # @brief アウトポートを追加する関数
-#
+# @param name
+# @param i_port
+# @param dlg_control
 def CompAddOutPort(name, i_port, dlg_control):
     if OOoRTC.calc_comp != None:
         tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
@@ -2450,8 +3093,9 @@ def CompAddOutPort(name, i_port, dlg_control):
 
 ##
 # @brief インポートを追加する関数
-#
-
+# @param name
+# @param o_port
+# @param dlg_control
 def CompAddInPort(name, o_port, dlg_control):
     if OOoRTC.calc_comp != None:
         tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
@@ -2580,6 +3224,7 @@ class Bridge(object):
 # @brief ネーミングサービスへ接続する関数
 # @param s_name
 # @param orb
+# @return 
 #
 def SetNamingServer(s_name, orb):
     
@@ -2594,9 +3239,7 @@ def SetNamingServer(s_name, orb):
 # @brief ツリーで選択したアイテムがポートかどうか判定する関数
 # @param objectTree ダイアログのツリー
 # @param _path ポートのパスのリスト
-#
-
-
+# @return 
 def JudgePort(objectTree, _paths):
     m_list = []
         
@@ -2639,7 +3282,11 @@ def JudgePort(objectTree, _paths):
 
 ##
 # @brief 各RTCのパスを取得する関数
-#
+# @param context
+# @param rtclist
+# @param name
+# @param oParent
+# @param oTreeDataModel
 def ListRecursive(context, rtclist, name, oParent, oTreeDataModel):
     
     m_blLength = 100
@@ -2711,6 +3358,14 @@ def ListRecursive(context, rtclist, name, oParent, oTreeDataModel):
             bl = i.next_n(m_blLength)
 
 
+
+##
+# @brief
+# @param naming
+# @param rtclist
+# @param name
+# @param oParent
+# @param oTreeDataModel
 def rtc_get_rtclist(naming, rtclist, name, oParent, oTreeDataModel):  
     name_cxt = naming.getRootContext()
     ListRecursive(name_cxt,rtclist,name, oParent, oTreeDataModel)
@@ -2726,7 +3381,8 @@ def rtc_get_rtclist(naming, rtclist, name, oParent, oTreeDataModel):
                        
 ##
 # @brief ポートのパスのリストを取得する関数
-#
+# @param name
+# @return 
 def getPathList(name):
     if OOoRTC.mgr != None:
         orb = OOoRTC.mgr._orb
@@ -2740,7 +3396,10 @@ def getPathList(name):
 
 ##
 # @brief ダイアログのツリーにネーミングサーバーのオブジェクトを登録する関数
-#
+# @param oTreeModel
+# @param smgr
+# @param ctx
+# @param dlg_control
 
 def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
     oTree = dlg_control.getControl( m_ControlName.RTCTreeName )
@@ -2811,6 +3470,7 @@ def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
 
 ##
 # @brief OpenOffice Calcを操作するためのクラス
+# @class OOoCalc
 # http://d.hatena.ne.jp/kakurasan/20100408/p1のソースコード(GPLv2)の一部
 #
 
@@ -2945,6 +3605,7 @@ def LoadSheet():
 def UpdateSaveSheet():
     
     if OOoRTC.calc_comp:
+        OOoRTC.calc_comp.update_cellName()
         try:
           calc = OOoCalc()
         except NotOOoCalcException:
@@ -3047,6 +3708,8 @@ def UpdateSaveSheet():
 
 ##
 # @brief ツリーの選択位置が変わったときに各テキストボックスの内容を変更する関数
+# @param dlg_control
+# @param m_port
 #
 
 def UpdateTree(dlg_control, m_port):
@@ -3079,7 +3742,7 @@ def UpdateTree(dlg_control, m_port):
 
 ##
 # @brief データポートのリストを更新する関数
-#
+# @param dlg_control
 
 def UpdateDataPortList(dlg_control):
     if OOoRTC.calc_comp:
@@ -3097,7 +3760,7 @@ def UpdateDataPortList(dlg_control):
             
 ##
 # @brief インポートのリストを更新する関数
-#
+# @param dlg_control
 def UpdateInPortList(dlg_control):
     
     if OOoRTC.calc_comp:
@@ -3118,7 +3781,8 @@ def UpdateInPortList(dlg_control):
 
 ##
 # @brief 関連付けしたポートのリストを更新する関数
-#
+# @param dlg_control
+# @param m_port
 def UpdateAttachPort(dlg_control, m_port):
     
     ipcb_control = dlg_control.getControl( m_ControlName.AttachCBName )
@@ -3133,7 +3797,7 @@ def UpdateAttachPort(dlg_control, m_port):
 
 ##
 # @brief ポートを削除したときに各テキストボックスを変更する関数
-#
+# @param dlg_control
 def ClearInfo(dlg_control):
     
     ffcol_control = dlg_control.getControl( m_ControlName.InfoTName )
@@ -3152,9 +3816,17 @@ def ClearInfo(dlg_control):
 # @brief データポートリストのコールバック
 #
 class PortListListener(unohelper.Base, XTextListener):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
     def __init__(self, dlg_control):
         self.dlg_control = dlg_control
     
+    ##
+    # @brief 
+    # @param self
+    # @param actionEvent
     def textChanged(self, actionEvent):
         UpdateInPortList(self.dlg_control)
         if OOoRTC.calc_comp:
@@ -3169,7 +3841,8 @@ class PortListListener(unohelper.Base, XTextListener):
 
 ##
 # @brief ポート関連付けの関数
-#
+# @param dlg_control
+# @param m_port
 def AttachTC(dlg_control, m_port):
     
     tfcol_control = dlg_control.getControl( m_ControlName.InPortCBName )
@@ -3197,9 +3870,19 @@ def AttachTC(dlg_control, m_port):
 # @brief ポート関連付けボタンのコールバック
 #
 class AttachListener( unohelper.Base, XActionListener):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
+    # @param _paths
     def __init__(self, dlg_control, _paths):
         self._paths = _paths
         self.dlg_control = dlg_control
+
+    ##
+    # @brief 
+    # @param self
+    # @param actionEvent
     def actionPerformed(self, actionEvent):
         
 
@@ -3238,7 +3921,8 @@ class AttachListener( unohelper.Base, XActionListener):
 
 ##
 # @brief ポート関連付けの関数
-#
+# @param dlg_control
+# @param m_port
 def DetachTC(dlg_control, m_port):
     tfcol_control = dlg_control.getControl( m_ControlName.AttachCBName )
     iname = str(tfcol_control.Text)
@@ -3262,10 +3946,20 @@ def DetachTC(dlg_control, m_port):
 # @brief ポート関連付け解除ボタンのコールバック
 #
 class DetachListener( unohelper.Base, XActionListener):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
+    # @param _paths
     def __init__(self, dlg_control, _paths):
         
         self._paths = _paths
         self.dlg_control = dlg_control
+
+    ##
+    # @brief 
+    # @param self
+    # @param actionEvent
     def actionPerformed(self, actionEvent):
 
         if OOoRTC.calc_comp:
@@ -3297,7 +3991,8 @@ class DetachListener( unohelper.Base, XActionListener):
 
 ##
 # @brief ポートのパラメータを設定する関数
-#
+# @param m_port
+# @param dlg_control
 
 def SetPortParam(m_port, dlg_control):
     objectControlRow = dlg_control.getControl( m_ControlName.RowFName )
@@ -3322,12 +4017,21 @@ def SetPortParam(m_port, dlg_control):
 # @brief ポート作成ボタンのコールバック
 #
 class CreatePortListener( unohelper.Base, XActionListener):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
+    # @param _paths
     def __init__(self, dlg_control, _paths):
         self.nCount = 0
         
         self._paths = _paths
         self.dlg_control = dlg_control
 
+    ##
+    # @brief 
+    # @param self
+    # @param actionEvent
     def actionPerformed(self, actionEvent):
         objectControl = self.dlg_control.getControl( m_ControlName.TextFName )
         
@@ -3398,6 +4102,13 @@ class CreatePortListener( unohelper.Base, XActionListener):
 #
 
 class SetRTCTreeListener( unohelper.Base, XActionListener ):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param oTreeModel
+    # @param smgr
+    # @param ctx
+    # @param dlg_control
     def __init__(self, oTreeModel, smgr, ctx, dlg_control):
         
         self.oTreeModel = oTreeModel
@@ -3405,6 +4116,10 @@ class SetRTCTreeListener( unohelper.Base, XActionListener ):
         self.ctx = ctx
         self.dlg_control = dlg_control
 
+    ##
+    # @brief 
+    # @param self
+    # @param actionEvent
     def actionPerformed(self, actionEvent):
         
         SetRTCTree(self.oTreeModel, self.smgr, self.ctx, self.dlg_control)
@@ -3417,9 +4132,19 @@ class SetRTCTreeListener( unohelper.Base, XActionListener ):
 #
 
 class MySelectListener( unohelper.Base, XSelectionChangeListener):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
+    # @param _paths
     def __init__(self, dlg_control, _paths):
         self.dlg_control = dlg_control
         self._paths = _paths
+
+    ##
+    # @brief 
+    # @param self
+    # @param ev
     def selectionChanged(self, ev):
         
         objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
@@ -3447,7 +4172,8 @@ class MySelectListener( unohelper.Base, XSelectionChangeListener):
 
 ##
 # @brief ポートの削除の関数
-#
+# @param m_port
+# @param dlg_control
 def DelPortTC(m_port, dlg_control):
     ClearInfo(dlg_control)
     MyMsgBox('',OOoRTC.SetCoding('削除しました','utf-8'))
@@ -3462,10 +4188,19 @@ def DelPortTC(m_port, dlg_control):
 #
             
 class DeleteListener( unohelper.Base, XActionListener ):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
+    # @param _paths
     def __init__(self, dlg_control, _paths):
         self._paths = _paths
         self.dlg_control = dlg_control
 
+    ##
+    # @brief 
+    # @param self
+    # @param actionEvent
     def actionPerformed(self, actionEvent):
         objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
         
@@ -3514,10 +4249,19 @@ class DeleteListener( unohelper.Base, XActionListener ):
 #
 
 class SetColListener( unohelper.Base, XActionListener ):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
+    # @param _paths
     def __init__(self, dlg_control, _paths):
         self._paths = _paths
         self.dlg_control = dlg_control
 
+    ##
+    # @brief
+    # @param self
+    # @param actionEvent
     def actionPerformed(self, actionEvent):
         objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
         t_comp, nd = JudgePort(objectTree, self._paths)
@@ -3546,9 +4290,17 @@ class SetColListener( unohelper.Base, XActionListener ):
 #
 
 class SetAllColListener( unohelper.Base, XActionListener ):
+    ##
+    # @brief コンストラクタ
+    # @param self
+    # @param dlg_control
     def __init__(self, dlg_control):
         self.dlg_control = dlg_control
 
+    ##
+    # @brief
+    # @param self
+    # @param actionEvent
     def actionPerformed(self, actionEvent):
         #tfcol_control = self.dlg_control.getControl( m_ControlName.ColTName )
         #tfcol_control.setText(str(2))
