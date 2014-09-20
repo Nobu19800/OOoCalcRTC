@@ -328,6 +328,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.Red = [255]
     self.Green = [255]
     self.Blue = [0]
+
+    self._mutex = threading.RLock()
+    self.guard = None
     
     
     return
@@ -419,7 +422,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             self._ConfInPorts[name] = MyInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
         
         m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
-                                          DataListener(self._ConfInPorts[name]))
+                                          DataListener(self._ConfInPorts[name],self))
 
   ##
   # @brief アウトポート追加の関数
@@ -491,7 +494,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
         
         m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
-                                          DataListener(self._InPorts[name]))
+                                          DataListener(self._InPorts[name], self))
 
         return self._InPorts[name]
 
@@ -685,6 +688,35 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
   ##
+  # @brief
+  # @param self
+  # @param ip
+  def UpdateAPort(self, ip):
+      
+    
+     
+      for n,p in ip.attachports.items():
+        if self._OutPorts.has_key(p) == True:
+            op = self._OutPorts[p]
+            if len(op.attachports) != 0:
+                Flag = True
+                for i,j in op.attachports.items():
+                    if self._InPorts.has_key(j) == True:
+                        #if len(self._InPorts[j].buffdata) == 0:
+                        if self._InPorts[j]._port.isNew() != True:
+                            Flag = False
+                    else:
+                        Flag = False
+                if Flag:
+                    self.guard = OpenRTM_aist.ScopedLock(self._mutex)
+                    for i,j in op.attachports.items():
+                        self._InPorts[j].putData(self)
+                        
+                    op.putData(self)
+                    del self.guard
+
+
+  ##
   # @brief 周期処理用コールバック関数
   # @param self
   # @param ec_id
@@ -698,6 +730,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     if int(self.actionLock[0]) == 1:
         self.calc.document.addActionLock()
+        self.guard = OpenRTM_aist.ScopedLock(self._mutex)
+
+    
 
 
 
@@ -727,22 +762,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             
     if int(self.actionLock[0]) == 1:
         self.calc.document.removeActionLock()
+        del self.guard
 
-    for n,op in self._OutPorts.items():
-        if len(op.attachports) != 0:
-            Flag = True
-            for i,j in op.attachports.items():
-                if self._InPorts.has_key(j) == True:
-                    #if len(self._InPorts[j].buffdata) == 0:
-                    if self._InPorts[j]._port.isNew() != True:
-                        Flag = False
-                else:
-                    Flag = False
-            if Flag:
-                for i,j in op.attachports.items():
-                    self._InPorts[j].putData(self)
-                    
-                op.putData(self)
+    
     
     return RTC.RTC_OK
 
@@ -3018,9 +3040,11 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
     # @brief コンストラクタ
     # @param self
     # @param m_port
+    # @param m_rtc
     #
-  def __init__(self, m_port):
+  def __init__(self, m_port, m_rtc):
     self.m_port = m_port
+    self.m_rtc = m_rtc
 
     ##
     # @brief デストラクタ
@@ -3040,6 +3064,10 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
     guard = OpenRTM_aist.ScopedLock(self.m_port._mutex)
     self.m_port.buffdata.append(data.data)
     del guard
+
+    
+    self.m_rtc.UpdateAPort(self.m_port)
+    
 
 
 
@@ -3929,7 +3957,7 @@ class AttachListener( unohelper.Base, XActionListener):
 
 
 ##
-# @brief ポート関連付けの関数
+# @brief ポート関連付け解除の関数
 # @param dlg_control
 # @param m_port
 def DetachTC(dlg_control, m_port):
