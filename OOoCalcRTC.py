@@ -3,7 +3,7 @@
 
 ##
 #   @file OOoCalcRTC.py
-#
+#   @brief OOoCalcControl Component
 
 import optparse
 import sys,os,platform
@@ -153,7 +153,7 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
 class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
     ##
     # @brief コンストラクタ
-    # @param self
+    # @param self 
     # @param e_rtc OOoCalcRTC
     #
    def __init__(self,e_rtc):
@@ -161,8 +161,8 @@ class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
 
     ##
     # @brief 
-    # @param self
-    # @param config_param_name
+    # @param self 
+    # @param config_param_name 
     #
    def __call__(self, config_param_name):
         self.m_rtc.ConfigUpdate()
@@ -180,7 +180,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     ##
     # @brief コンストラクタ
-    # @param self
+    # @param self 
     # @param m_comp OOoCalcRTC
     #
     def __init__(self, m_comp):
@@ -189,7 +189,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     ##
     # @brief セルオブジェクト、シートオブジェクトの取得
-    # @param self
+    # @param self 
     # @param l 行番号
     # @param c 列番号
     # @param sn シート名
@@ -212,7 +212,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     ##
     # @brief セルの文字列を取得
-    # @param self
+    # @param self 
     # @param l 行番号
     # @param c 列番号
     # @param sn シート名
@@ -229,7 +229,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     ##
     # @brief セルの値を設定
-    # @param self
+    # @param self 
     # @param l 行番号
     # @param c 列番号
     # @param sn シート名
@@ -260,7 +260,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
     ##
     # @brief セルの文字列を設定
-    # @param self
+    # @param self 
     # @param l 行番号
     # @param c 列番号
     # @param sn シート名
@@ -298,7 +298,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     ##
     # @brief コンストラクタ
-    # @param manager
+    # @param self 
+    # @param manager マネージャーオブジェクト
     #
   def __init__(self, manager):
     OpenRTM_aist.DataFlowComponentBase.__init__(self, manager)
@@ -336,7 +337,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     return
   ##
   # @brief 実行周期を設定する関数
-  # @param self
+  # @param self 
   # @param rate：実行周期
   #
 
@@ -346,7 +347,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief 活性化するための関数
-  # @param self
+  # @param self 
   #    
 
   def m_activate(self):
@@ -355,7 +356,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief 不活性化するための関数
-  # @param self
+  # @param self 
   #
 
   def m_deactivate(self):
@@ -364,8 +365,15 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief コンフィギュレーションパラメータによりアウトポートを追加する関数
-  # @param self
-  #
+  # @param self 
+  # @param name データポート名
+  # @param data_type データ型
+  # @param row 行番号
+  # @param col 列番号
+  # @param mlen 行番号の範囲
+  # @param sn シート名
+  # @param mstate 列を移動するか
+  # @param t_attachports 関連付けしたインポート
 
   def m_addConfOutPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
 
@@ -394,8 +402,15 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief コンフィギュレーションパラメータによりインポートを追加する関数
-  # @param self
-  #
+  # @param self 
+  # @param name データポート名
+  # @param data_type データ型
+  # @param row 行番号
+  # @param col 列番号
+  # @param mlen 行番号の範囲
+  # @param sn シート名
+  # @param mstate 列を移動するか
+  # @param t_attachports 関連付けしたアウトポート
   
   def m_addConfInPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
     sig = m_DataType.Single
@@ -431,7 +446,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param m_inport 接続するインポート
   # @param row データを書き込む行番号
   # @param sn 接続するインポートのパス
-  # @return 
+  # @return 追加したアウトポート
   def m_addOutPort(self, name, m_inport, row, col, mlen, sn, mstate, t_attachports):
 
     sig = m_DataType.Single
@@ -469,7 +484,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param m_inport 接続するアウトポート
   # @param row データを書き込む行番号
   # @param sn 書き込むシート
-  # @return 
+  # @return 追加したインポート
         
   def m_addInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
     sig = m_DataType.Single
@@ -504,7 +519,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief アウトポート削除の関数
-  # @param self
+  # @param self 
   # @param outport 削除するアウトポート
   #
   
@@ -515,7 +530,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief インポート削除の関数
-  # @param self
+  # @param self 
   # @param outport 削除するインポート
   #
 
@@ -527,7 +542,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief コンフィギュレーションパラメータが変更されたときに呼び出される関数
-  # @param self
+  # @param self 
   #
   
   def ConfigUpdate(self):
@@ -589,8 +604,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief 初期化処理用コールバック関数
-  # @param self
-  # @return 
+  # @param self 
+  # @return RTC::ReturnCode_t
   #
   
   def onInitialize(self):
@@ -622,10 +637,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   
   ##
   # @brief 不活性化時のコールバック関数
-  # @param self
-  # @param ec_id
-  # @return 
-  #
+  # @param self 
+  # @param ec_id target ExecutionContext Id
+  # @return RTC::ReturnCode_t
   
   def onDeactivated(self, ec_id):
 
@@ -688,9 +702,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
   ##
-  # @brief
-  # @param self
-  # @param ip
+  # @brief インポートと関連付けしたアウトポートのデータ入力後、インポートのデータ出力
+  # @param self 
+  # @param ip インポート
   def UpdateAPort(self, ip):
       
     
@@ -718,10 +732,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief 周期処理用コールバック関数
-  # @param self
-  # @param ec_id
-  # @return 
-  #
+  # @param self 
+  # @param ec_id target ExecutionContext Id
+  # @return RTC::ReturnCode_t
   
   def onExecute(self, ec_id):
     
@@ -773,10 +786,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     
   ##
   # @brief 終了処理用コールバック関数
-  # @param self
-  # @param ec_id
-  # @return 
-  #
+  # @param self 
+  # @param ec_id target ExecutionContext Id
+  # @return RTC::ReturnCode_t
   def on_shutdown(self, ec_id):
       OOoRTC.calc_comp = None
       return RTC.RTC_OK
@@ -784,7 +796,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
   ##
   # @brief データポートと関連付けしたセルに名前を入力
-  # @param self
+  # @param self 
   #
   def update_cellName(self):
       for n,op in self._ConfOutPorts.items():
@@ -812,19 +824,18 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 class MyPortObject:
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param port
-    # @param data
-    # @param name
-    # @param row
-    # @param col
-    # @param mlen
-    # @param sn
-    # @param mstate
-    # @param port_a
-    # @param m_dataType
-    # @param t_attachports
-    #
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         
         self._port = port
@@ -851,8 +862,8 @@ class MyPortObject:
 
     ##
     # @brief 
-    # @param self
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def update_cellName(self, m_cal):
         if m_cal.calc.sheets.hasByName(self._sn):
             sheet = m_cal.calc.sheets.getByName(self._sn)
@@ -874,34 +885,34 @@ class MyPortObject:
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param m_len
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSub(self, cell, m_len):
         pass
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param m_len
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSingle(self, cell, m_len):
         cell.getCellByPosition(0, 0).String = self._name
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param m_len
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSeq(self, cell, m_len):
         for j in range(0, m_len):
             cell.getCellByPosition(j, 0).String = self._name + ":" + str(j)
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param m_len
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameEx(self, cell, m_len):
         b = self._name + ":"
         count = [0]
@@ -1205,11 +1216,11 @@ class MyPortObject:
 
     ##
     # @brief 
-    # @param self
-    # @param b
-    # @param count
-    # @param m_len
-    # @param cell
+    # @param self 
+    # @param b データ名
+    # @param count カウンター
+    # @param m_len 行の範囲
+    # @param cell セルオブジェクト
     # @return 
     def input_cellNameEx(self, b, count, m_len, cell):
         
@@ -1224,15 +1235,15 @@ class MyPortObject:
 
     ##
     # @brief 
-    # @param self
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
         pass
 
     ##
     # @brief 
-    # @param self
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def GetCell(self, m_cal):
         if m_cal.calc.sheets.hasByName(self._sn):
             sheet = m_cal.calc.sheets.getByName(self._sn)
@@ -1252,16 +1263,16 @@ class MyPortObject:
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param b
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param b データ
     def updateIn(self, cell, b):
         pass
 
     ##
     # @brief 
-    # @param self
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putIn(self, m_cal):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1295,10 +1306,10 @@ class MyPortObject:
                     
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param sheet
-    # @param m_cal
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param sheet シートオブジェクト
+    # @param m_cal OOoCalcRTC
     def putOut(self, cell, sheet, m_cal):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1348,34 +1359,33 @@ class MyPortObject:
 class MyInPort(MyPortObject):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param port
-    # @param data
-    # @param name
-    # @param row
-    # @param col
-    # @param mlen
-    # @param sn
-    # @param mstate
-    # @param port_a
-    # @param m_dataType
-    # @param t_attachports
-    #
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
     ##
     # @brief 
-    # @param self
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
         self.putIn(m_cal)
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param b
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param b データ
     def updateIn(self, cell, b):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1391,9 +1401,9 @@ class MyInPort(MyPortObject):
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param m_len
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSub(self, cell, m_len):
         self.update_cellNameSingle(cell, m_len)
 
@@ -1405,34 +1415,33 @@ class MyInPort(MyPortObject):
 class MyInPortSeq(MyPortObject):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param port
-    # @param data
-    # @param name
-    # @param row
-    # @param col
-    # @param mlen
-    # @param sn
-    # @param mstate
-    # @param port_a
-    # @param m_dataType
-    # @param t_attachports
-    #
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
     ##
     # @brief 
-    # @param self
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
         self.putIn(m_cal)
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param b
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param b データ
     def updateIn(self, cell, b):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1452,9 +1461,9 @@ class MyInPortSeq(MyPortObject):
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param m_len
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSub(self, cell, m_len):
         self.update_cellNameSeq(cell, m_len)
 
@@ -1464,42 +1473,41 @@ class MyInPortSeq(MyPortObject):
 class MyInPortEx(MyPortObject):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param port
-    # @param data
-    # @param name
-    # @param row
-    # @param col
-    # @param mlen
-    # @param sn
-    # @param mstate
-    # @param port_a
-    # @param m_dataType
-    # @param t_attachports
-    #
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
     ##
     # @brief 
-    # @param self
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
         self.putIn(m_cal)
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param m_len
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param b データ
     def update_cellNameSub(self, cell, m_len):
         self.update_cellNameEx(cell, m_len)
 
     ##
     # @brief 
-    # @param self
-    # @param cell
-    # @param b
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param b データ
     def updateIn(self, cell, b):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1815,11 +1823,11 @@ class MyInPortEx(MyPortObject):
 
     ##
     # @brief 
-    # @param b
-    # @param count
-    # @param m_len
-    # @param cell
-    # @param d_type
+    # @param b データ
+    # @param count カウンター
+    # @param m_len 行の範囲
+    # @param cell セルオブジェクト
+    # @param d_type データタイプ
     def putDataEx(self, b, count, m_len, cell, d_type):
         m_string = m_DataType.String
         m_value = m_DataType.Value
@@ -1841,25 +1849,25 @@ class MyInPortEx(MyPortObject):
 class MyOutPort(MyPortObject):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param port
-    # @param data
-    # @param name
-    # @param row
-    # @param col
-    # @param mlen
-    # @param sn
-    # @param mstate
-    # @param port_a
-    # @param m_dataType
-    # @param t_attachports
-    #
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
     ##
-    # @brief 
-    # @param m_cal
+    # @brief
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
         cell, sheet = self.GetCell(m_cal)
 
@@ -1886,9 +1894,10 @@ class MyOutPort(MyPortObject):
                         self._num = self._num + 1
 
     ##
-    # @brief 
-    # @param cell
-    # @param m_len
+    # @brief
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSub(self, cell, m_len):
         self.update_cellNameSingle(cell, m_len)
 
@@ -1898,25 +1907,25 @@ class MyOutPort(MyPortObject):
 class MyOutPortSeq(MyPortObject):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param port
-    # @param data
-    # @param name
-    # @param row
-    # @param col
-    # @param mlen
-    # @param sn
-    # @param mstate
-    # @param port_a
-    # @param m_dataType
-    # @param t_attachports
-    #
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
     ##
     # @brief 
-    # @param m_cal
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
         cell, sheet = self.GetCell(m_cal)
 
@@ -1946,8 +1955,8 @@ class MyOutPortSeq(MyPortObject):
 
     ##
     # @brief 
-    # @param cell
-    # @param m_len
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSub(self, cell, m_len):
         self.update_cellNameSeq(cell, m_len)
 
@@ -1956,19 +1965,35 @@ class MyOutPortSeq(MyPortObject):
 # @brief 
 #
 class MyOutPortEx(MyPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
     def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
         MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
     ##
-    # @brief 
-    # @param cell
-    # @param m_len
+    # @brief
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
     def update_cellNameSub(self, cell, m_len):
         self.update_cellNameEx(cell, m_len)
 
     ##
-    # @brief 
-    # @param m_cal
+    # @brief
+    # @param self 
+    # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
         
         m_string = m_DataType.String
@@ -2728,9 +2753,9 @@ class MyOutPortEx(MyPortObject):
         
     ##
     # @brief 
-    # @param count
-    # @param val
-    # @param d_type
+    # @param count カウンター
+    # @param val データ配列
+    # @param d_type データタイプ
     def putDataEx(self, count, val, d_type):
         
         if count[0] < len(val):
@@ -2758,8 +2783,8 @@ class m_DataType:
 
 ##
 # @brief
-# @param data_type
-# @return 
+# @param data_type データ型
+# @return データオブジェクト、[データ型、データのタイプ、データ型の名前]
 def GetDataSType(data_type):
     sig = m_DataType.Single
     sec = m_DataType.Sequence
@@ -3038,9 +3063,9 @@ def Set_Rate():
 class DataListener(OpenRTM_aist.ConnectorDataListenerT):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param m_port
-    # @param m_rtc
+    # @param self 
+    # @param m_port データポートオブジェクト
+    # @param m_rtc OOoCalcRTC
     #
   def __init__(self, m_port, m_rtc):
     self.m_port = m_port
@@ -3048,16 +3073,16 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
 
     ##
     # @brief デストラクタ
-    # @param self
+    # @param self 
     #
   def __del__(self):
     pass
 
     ##
     # @brief
-    # @param self
-    # @param info
-    # @param cdrdata
+    # @param self 
+    # @param info 
+    # @param cdrdata 
   def __call__(self, info, cdrdata):
     data = OpenRTM_aist.ConnectorDataListenerT.__call__(self, info, cdrdata, self.m_port._data)
 
@@ -3074,7 +3099,7 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
 
 ##
 # @brief RTCをマネージャに登録する関数
-# @param manager
+# @param manager マネージャーオブジェクト
 def OOoCalcControlInit(manager):
   profile = OpenRTM_aist.Properties(defaults_str=ooocalccontrol_spec)
   manager.registerFactory(profile,
@@ -3084,8 +3109,8 @@ def OOoCalcControlInit(manager):
 
 
 ##
-# @brief 
-# @param manager
+# @brief RTCをマネージャに登録する関数
+# @param manager マネージャーオブジェクト
 def MyModuleInit(manager):
   manager._factory.unregisterObject(imp_id)
   OOoCalcControlInit(manager)
@@ -3098,9 +3123,9 @@ def MyModuleInit(manager):
 
 ##
 # @brief アウトポートを追加する関数
-# @param name
-# @param i_port
-# @param dlg_control
+# @param name データポート名
+# @param i_port 接続するデータポート
+# @param dlg_control ダイアログオブジェクト
 def CompAddOutPort(name, i_port, dlg_control):
     if OOoRTC.calc_comp != None:
         tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
@@ -3128,9 +3153,9 @@ def CompAddOutPort(name, i_port, dlg_control):
 
 ##
 # @brief インポートを追加する関数
-# @param name
-# @param o_port
-# @param dlg_control
+# @param name データポート名
+# @param o_port 接続するデータポート
+# @param dlg_control ダイアログオブジェクト
 def CompAddInPort(name, o_port, dlg_control):
     if OOoRTC.calc_comp != None:
         tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
@@ -3259,10 +3284,9 @@ class Bridge(object):
 
 ##
 # @brief ネーミングサービスへ接続する関数
-# @param s_name
-# @param orb
-# @return 
-#
+# @param s_name ネームサーバーの名前
+# @param orb ORBオブジェクト
+# @return ネーミングコンテキスト
 def SetNamingServer(s_name, orb):
     
     try:
@@ -3276,7 +3300,7 @@ def SetNamingServer(s_name, orb):
 # @brief ツリーで選択したアイテムがポートかどうか判定する関数
 # @param objectTree ダイアログのツリー
 # @param _path ポートのパスのリスト
-# @return 
+# @return [データポートまでのPath、選択中のツリーノード]
 def JudgePort(objectTree, _paths):
     m_list = []
         
@@ -3319,11 +3343,12 @@ def JudgePort(objectTree, _paths):
 
 ##
 # @brief 各RTCのパスを取得する関数
-# @param context
-# @param rtclist
-# @param name
-# @param oParent
-# @param oTreeDataModel
+# @param context ネーミングコンテキスト
+# @param rtclist データポートのリスト
+# @param name 現在のパス名
+# @param oParent ツリーの現在のオブジェクト
+# @param oTreeDataModel ツリーオブジェクト
+#
 def ListRecursive(context, rtclist, name, oParent, oTreeDataModel):
     
     m_blLength = 100
@@ -3398,11 +3423,11 @@ def ListRecursive(context, rtclist, name, oParent, oTreeDataModel):
 
 ##
 # @brief
-# @param naming
-# @param rtclist
-# @param name
-# @param oParent
-# @param oTreeDataModel
+# @param naming ネーミングコンテキスト
+# @param rtclist データポートのリスト
+# @param name 現在のパス名
+# @param oParent ツリーの現在のオブジェクト
+# @param oTreeDataModel ツリーオブジェクト
 def rtc_get_rtclist(naming, rtclist, name, oParent, oTreeDataModel):  
     name_cxt = naming.getRootContext()
     ListRecursive(name_cxt,rtclist,name, oParent, oTreeDataModel)
@@ -3418,8 +3443,9 @@ def rtc_get_rtclist(naming, rtclist, name, oParent, oTreeDataModel):
                        
 ##
 # @brief ポートのパスのリストを取得する関数
-# @param name
-# @return 
+# @param name ネームサーバーの名前
+# @return ポートのパスのリスト
+#
 def getPathList(name):
     if OOoRTC.mgr != None:
         orb = OOoRTC.mgr._orb
@@ -3433,10 +3459,10 @@ def getPathList(name):
 
 ##
 # @brief ダイアログのツリーにネーミングサーバーのオブジェクトを登録する関数
-# @param oTreeModel
-# @param smgr
-# @param ctx
-# @param dlg_control
+# @param oTreeModel ツリーオブジェクト
+# @param smgr UNOコンポーネントコンテキスト
+# @param ctx UNOサービスマネージャー
+# @param dlg_control ダイアログオブジェクト
 
 def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
     oTree = dlg_control.getControl( m_ControlName.RTCTreeName )
@@ -3745,8 +3771,8 @@ def UpdateSaveSheet():
 
 ##
 # @brief ツリーの選択位置が変わったときに各テキストボックスの内容を変更する関数
-# @param dlg_control
-# @param m_port
+# @param dlg_control ダイアログオブジェクト
+# @param m_port データポートオブジェクト
 #
 
 def UpdateTree(dlg_control, m_port):
@@ -3779,7 +3805,7 @@ def UpdateTree(dlg_control, m_port):
 
 ##
 # @brief データポートのリストを更新する関数
-# @param dlg_control
+# @param dlg_control ダイアログオブジェクト
 
 def UpdateDataPortList(dlg_control):
     if OOoRTC.calc_comp:
@@ -3797,7 +3823,7 @@ def UpdateDataPortList(dlg_control):
             
 ##
 # @brief インポートのリストを更新する関数
-# @param dlg_control
+# @param dlg_control ダイアログオブジェクト
 def UpdateInPortList(dlg_control):
     
     if OOoRTC.calc_comp:
@@ -3818,8 +3844,8 @@ def UpdateInPortList(dlg_control):
 
 ##
 # @brief 関連付けしたポートのリストを更新する関数
-# @param dlg_control
-# @param m_port
+# @param dlg_control ダイアログオブジェクト
+# @param m_port データポートオブジェクト
 def UpdateAttachPort(dlg_control, m_port):
     
     ipcb_control = dlg_control.getControl( m_ControlName.AttachCBName )
@@ -3834,7 +3860,7 @@ def UpdateAttachPort(dlg_control, m_port):
 
 ##
 # @brief ポートを削除したときに各テキストボックスを変更する関数
-# @param dlg_control
+# @param dlg_control ダイアログオブジェクト
 def ClearInfo(dlg_control):
     
     ffcol_control = dlg_control.getControl( m_ControlName.InfoTName )
@@ -3855,15 +3881,15 @@ def ClearInfo(dlg_control):
 class PortListListener(unohelper.Base, XTextListener):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param dlg_control
+    # @param self 
+    # @param dlg_control ダイアログオブジェクト
     def __init__(self, dlg_control):
         self.dlg_control = dlg_control
     
     ##
     # @brief 
-    # @param self
-    # @param actionEvent
+    # @param self 
+    # @param actionEvent 
     def textChanged(self, actionEvent):
         UpdateInPortList(self.dlg_control)
         if OOoRTC.calc_comp:
@@ -3878,8 +3904,8 @@ class PortListListener(unohelper.Base, XTextListener):
 
 ##
 # @brief ポート関連付けの関数
-# @param dlg_control
-# @param m_port
+# @param dlg_control ダイアログオブジェクト
+# @param m_port データポートオブジェクト
 def AttachTC(dlg_control, m_port):
     
     tfcol_control = dlg_control.getControl( m_ControlName.InPortCBName )
@@ -3909,17 +3935,17 @@ def AttachTC(dlg_control, m_port):
 class AttachListener( unohelper.Base, XActionListener):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param dlg_control
-    # @param _paths
+    # @param self 
+    # @param dlg_control ダイアログオブジェクト
+    # @param _paths データポートのパス
     def __init__(self, dlg_control, _paths):
         self._paths = _paths
         self.dlg_control = dlg_control
 
     ##
     # @brief 
-    # @param self
-    # @param actionEvent
+    # @param self 
+    # @param actionEvent 
     def actionPerformed(self, actionEvent):
         
 
@@ -3958,8 +3984,9 @@ class AttachListener( unohelper.Base, XActionListener):
 
 ##
 # @brief ポート関連付け解除の関数
-# @param dlg_control
-# @param m_port
+# @param dlg_control ダイアログオブジェクト
+# @param m_port データポートオブジェクト
+
 def DetachTC(dlg_control, m_port):
     tfcol_control = dlg_control.getControl( m_ControlName.AttachCBName )
     iname = str(tfcol_control.Text)
@@ -3985,9 +4012,9 @@ def DetachTC(dlg_control, m_port):
 class DetachListener( unohelper.Base, XActionListener):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param dlg_control
-    # @param _paths
+    # @param self 
+    # @param dlg_control ダイアログオブジェクト
+    # @param _paths データポートのパス
     def __init__(self, dlg_control, _paths):
         
         self._paths = _paths
@@ -3995,8 +4022,8 @@ class DetachListener( unohelper.Base, XActionListener):
 
     ##
     # @brief 
-    # @param self
-    # @param actionEvent
+    # @param self 
+    # @param actionEvent 
     def actionPerformed(self, actionEvent):
 
         if OOoRTC.calc_comp:
@@ -4028,8 +4055,8 @@ class DetachListener( unohelper.Base, XActionListener):
 
 ##
 # @brief ポートのパラメータを設定する関数
-# @param m_port
-# @param dlg_control
+# @param m_port データポートオブジェクト
+# @param dlg_control ダイアログオブジェクト
 
 def SetPortParam(m_port, dlg_control):
     objectControlRow = dlg_control.getControl( m_ControlName.RowFName )
@@ -4057,9 +4084,9 @@ def SetPortParam(m_port, dlg_control):
 class CreatePortListener( unohelper.Base, XActionListener):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param dlg_control
-    # @param _paths
+    # @param self 
+    # @param dlg_control ダイアログオブジェクト
+    # @param _paths データポートのパス
     def __init__(self, dlg_control, _paths):
         self.nCount = 0
         
@@ -4068,8 +4095,8 @@ class CreatePortListener( unohelper.Base, XActionListener):
 
     ##
     # @brief 
-    # @param self
-    # @param actionEvent
+    # @param self 
+    # @param actionEvent 
     def actionPerformed(self, actionEvent):
         objectControl = self.dlg_control.getControl( m_ControlName.TextFName )
         
@@ -4142,11 +4169,11 @@ class CreatePortListener( unohelper.Base, XActionListener):
 class SetRTCTreeListener( unohelper.Base, XActionListener ):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param oTreeModel
-    # @param smgr
-    # @param ctx
-    # @param dlg_control
+    # @param self 
+    # @param oTreeModel ツリーオブジェクト
+    # @param smgr UNOコンポーネントコンテキスト
+    # @param ctx UNOサービスマネージャー
+    # @param dlg_control ダイアログオブジェクト
     def __init__(self, oTreeModel, smgr, ctx, dlg_control):
         
         self.oTreeModel = oTreeModel
@@ -4156,8 +4183,8 @@ class SetRTCTreeListener( unohelper.Base, XActionListener ):
 
     ##
     # @brief 
-    # @param self
-    # @param actionEvent
+    # @param self 
+    # @param actionEvent 
     def actionPerformed(self, actionEvent):
         
         SetRTCTree(self.oTreeModel, self.smgr, self.ctx, self.dlg_control)
@@ -4172,17 +4199,17 @@ class SetRTCTreeListener( unohelper.Base, XActionListener ):
 class MySelectListener( unohelper.Base, XSelectionChangeListener):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param dlg_control
-    # @param _paths
+    # @param self 
+    # @param dlg_control ダイアログオブジェクト
+    # @param _paths データポートのパス
     def __init__(self, dlg_control, _paths):
         self.dlg_control = dlg_control
         self._paths = _paths
 
     ##
     # @brief 
-    # @param self
-    # @param ev
+    # @param self 
+    # @param ev 
     def selectionChanged(self, ev):
         
         objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
@@ -4210,8 +4237,8 @@ class MySelectListener( unohelper.Base, XSelectionChangeListener):
 
 ##
 # @brief ポートの削除の関数
-# @param m_port
-# @param dlg_control
+# @param m_port データポートオブジェクト
+# @param dlg_control ダイアログオブジェクト
 def DelPortTC(m_port, dlg_control):
     ClearInfo(dlg_control)
     MyMsgBox('',OOoRTC.SetCoding('削除しました','utf-8'))
@@ -4228,9 +4255,9 @@ def DelPortTC(m_port, dlg_control):
 class DeleteListener( unohelper.Base, XActionListener ):
     ##
     # @brief コンストラクタ
-    # @param self
-    # @param dlg_control
-    # @param _paths
+    # @param self 
+    # @param dlg_control ダイアログオブジェクト
+    # @param _paths データポートのパス
     def __init__(self, dlg_control, _paths):
         self._paths = _paths
         self.dlg_control = dlg_control
@@ -4238,7 +4265,7 @@ class DeleteListener( unohelper.Base, XActionListener ):
     ##
     # @brief 
     # @param self
-    # @param actionEvent
+    # @param actionEvent 
     def actionPerformed(self, actionEvent):
         objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
         
