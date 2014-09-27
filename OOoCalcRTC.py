@@ -554,7 +554,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
           if self._configsets.haveConfig(dn):
               
               self._configsets.activateConfigurationSet(dn)
-              self._configsets.update()
+              self._configsets.update(dn)
 
               
               tdt = ""
@@ -3184,12 +3184,20 @@ def CompAddInPort(name, o_port, dlg_control):
 def createOOoCalcComp():
 
     if OOoRTC.mgr == None:
-      OOoRTC.mgr = OpenRTM_aist.Manager.init(['OOoCalcRTC.py'])
-      OOoRTC.mgr.setModuleInitProc(MyModuleInit)
-      OOoRTC.mgr.activateManager()
-      OOoRTC.mgr.runManager(True)
+        if os.name == 'posix':
+            home = expanduser("~")
+            OOoRTC.mgr = OpenRTM_aist.Manager.init([os.path.abspath(__file__), '-f', home+'/rtc.conf'])
+        elif os.name == 'nt':
+            OOoRTC.mgr = OpenRTM_aist.Manager.init([os.path.abspath(__file__), '-f', '.\\rtc.conf'])
+        else:
+            return
+
+      
+        OOoRTC.mgr.setModuleInitProc(MyModuleInit)
+        OOoRTC.mgr.activateManager()
+        OOoRTC.mgr.runManager(True)
     else:
-      MyModuleInit(OOoRTC.mgr)
+        MyModuleInit(OOoRTC.mgr)
 
     try:
       calc = OOoCalc()
@@ -3217,7 +3225,7 @@ def createOOoCalcComp():
 
     
     
-    return None
+    return
 
 ##
 # @brief ポートを接続する関数
