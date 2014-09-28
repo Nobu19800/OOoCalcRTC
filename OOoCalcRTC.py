@@ -3082,8 +3082,8 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
     ##
     # @brief
     # @param self 
-    # @param info 
-    # @param cdrdata 
+    # @param info コネクタの情報
+    # @param cdrdata データ
   def __call__(self, info, cdrdata):
     data = OpenRTM_aist.ConnectorDataListenerT.__call__(self, info, cdrdata, self.m_port._data)
 
