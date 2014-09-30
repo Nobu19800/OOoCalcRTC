@@ -119,6 +119,8 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.dataport0.start_row", "A",
                   "conf.dataport0.end_row", "A",
                   "conf.dataport0.sheetname", "sheet1",
+                  "conf.dataport0.c_move", "1",
+                  "conf.dataport0.Attach_Port", "None",
                   "conf.__widget__.actionLock", "radio",
                   "conf.__widget__.Red", "spin",
                   "conf.__widget__.Green", "spin",
@@ -130,6 +132,8 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.__widget__.end_row", "text",
                   "conf.__widget__.sheetname", "text",
                   "conf.__widget__.data_type", "radio",
+                  "conf.__widget__.c_move", "radio",
+                  "conf.__widget__.Attach_Port", "text",
                   "conf.__constraints__.actionLock", "(0,1)",
                   "conf.__constraints__.Red", "0<=x<=255",
                   "conf.__constraints__.Green", "0<=x<=255",
@@ -143,6 +147,7 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                                                     TimedPoseVel2D,TimedSize2D,TimedGeometry2D,TimedCovariance2D,TimedPointCovariance2D,TimedCarlike,TimedSpeedHeading2D,
                                                     TimedPoint3D,TimedVector3D,TimedOrientation3D,TimedPose3D,TimedVelocity3D,TimedAngularVelocity3D,TimedAcceleration3D,
                                                     TimedAngularAcceleration3D,TimedPoseVel3D,TimedSize3D,TimedGeometry3D,TimedCovariance3D,TimedSpeedHeading3D,TimedOAP)""",
+                  "conf.__constraints__.c_move", "(0,1)",
                   ""]
 
 ##
@@ -329,6 +334,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.Red = [255]
     self.Green = [255]
     self.Blue = [0]
+    self.c_move = [1]
+    self.Attach_Port = ["None"]
 
     self._mutex = threading.RLock()
     self.guard = None
@@ -560,11 +567,17 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
               tdt = ""
               tmp = None
               if self._ConfInPorts.has_key(dn):
-                  tmp = self._ConfInPorts[dn]
-                  tdt = "DataInPort"
+                  if self.conf_port_type[0] != "DataInPort":
+                      del self._ConfInPorts[dn]
+                  else:
+                      tmp = self._ConfInPorts[dn]
+                      tdt = "DataInPort"
               if self._ConfOutPorts.has_key(dn):
-                  tmp = self._ConfOutPorts[dn]
-                  tdt = "DataOutPort"
+                  if self.conf_port_type[0] != "DataOutPort":
+                      del self._ConfOutPorts[dn]
+                  else:
+                      tmp = self._ConfOutPorts[dn]
+                      tdt = "DataOutPort"
 
               data_type = ""
               if tmp != None:
@@ -581,11 +594,22 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
               
 
               if int(self.conf_column[0]) > 0 and len(self.conf_start_row[0]) > 0:
+                  c_move = True
+                  if int(self.c_move[0]) == 0:
+                      c_move = False
+                  Attach_Port = {}
+                  tA = re.split(",",self.Attach_Port[0])
+                  for k in tA:
+                       if k != "" and k != "None":
+                           Attach_Port[k] = k
+
                   if tdt != None and data_type == self.conf_data_type[0]:# and self.conf_port_type[0] == tdt:
                       tmp._row = self.conf_start_row[0]
                       tmp._sn = self.conf_sheetname[0]
                       tmp._col = self.conf_column[0]
                       tmp._length = self.conf_end_row[0]
+                      tmp.attachports = Attach_Port 
+                      tmp.state = c_move
                       
 
                   else:
@@ -597,9 +621,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
                       
                       
                       if self.conf_port_type[0] == "DataInPort":
-                        self.m_addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
+                        self.m_addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
                       elif self.conf_port_type[0] == "DataOutPort":
-                        self.m_addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], True, {})
+                        self.m_addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
                       
 
   ##
@@ -627,6 +651,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.bindParameter("Red", self.Red, "255")
     self.bindParameter("Green", self.Green, "255")
     self.bindParameter("Blue", self.Blue, "0")
+    self.bindParameter("c_move", self.c_move, "1")
+    self.bindParameter("Attach_Port", self.Attach_Port, "None")
+    
     
     
     
@@ -700,34 +727,42 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     
     return RTC.RTC_OK
 
-
   ##
-  # @brief インポートと関連付けしたアウトポートのデータ入力後、インポートのデータ出力
+  # @brief 関連付けたインポート、アウトポートの処理
   # @param self 
   # @param ip インポート
-  def UpdateAPort(self, ip):
-      
-    
-     
+  # @param _OutPorts アウトポートのリスト
+  # @param _InPorts インポートのリスト
+  def udAPort(self, ip, _OutPorts, _InPorts):
       for n,p in ip.attachports.items():
-        if self._OutPorts.has_key(p) == True:
-            op = self._OutPorts[p]
+        if _OutPorts.has_key(p) == True:
+            op = _OutPorts[p]
             if len(op.attachports) != 0:
                 Flag = True
                 for i,j in op.attachports.items():
-                    if self._InPorts.has_key(j) == True:
+                    if _InPorts.has_key(j) == True:
                         #if len(self._InPorts[j].buffdata) == 0:
-                        if self._InPorts[j]._port.isNew() != True:
+                        if _InPorts[j]._port.isNew() != True:
                             Flag = False
                     else:
                         Flag = False
                 if Flag:
                     self.guard = OpenRTM_aist.ScopedLock(self._mutex)
                     for i,j in op.attachports.items():
-                        self._InPorts[j].putData(self)
+                        _InPorts[j].putData(self)
                         
                     op.putData(self)
                     del self.guard
+
+  ##
+  # @brief インポートと関連付けしたアウトポートのデータ入力後、インポートのデータ出力
+  # @param self 
+  # @param ip インポート
+  def UpdateAPort(self, ip):
+      self.udAPort(ip, self._OutPorts, self._InPorts)
+      self.udAPort(ip, self._ConfOutPorts, self._ConfInPorts)
+     
+      
 
 
   ##
@@ -750,10 +785,12 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
     for n,op in self._ConfOutPorts.items():
-        op.putData(self)
+        if len(op.attachports) == 0:
+            op.putData(self)
             
     for n,ip in self._ConfInPorts.items():
-        ip.putData(self)
+        if len(ip.attachports) == 0:
+            ip.putData(self)
 
 
             
