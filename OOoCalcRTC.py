@@ -521,16 +521,29 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         return self._InPorts[name]
 
     return None
-        
-        
 
+  ##
+  # @brief データポート全削除の関数
+  # @param self 
+  #
+  def m_removeAllPort(self):
+      for n,op in self._OutPorts.items():
+          op._port.disconnect_all()
+          self.removePort(op._port)
+      self._OutPorts = {}
+
+      for n,ip in self._InPorts.items():
+          ip._port.disconnect_all()
+          self.removePort(ip._port)
+      self._InPorts = {}
+  
   ##
   # @brief アウトポート削除の関数
   # @param self 
   # @param outport 削除するアウトポート
   #
   
-  def m_removeOutComp(self, outport):
+  def m_removeOutPort(self, outport):
       outport._port.disconnect_all()
       self.removePort(outport._port)
       del self._OutPorts[outport._name]
@@ -541,7 +554,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param outport 削除するインポート
   #
 
-  def m_removeInComp(self, inport):
+  def m_removeInPort(self, inport):
       inport._port.disconnect_all()
       self.removePort(inport._port)
       del self._InPorts[inport._name]
@@ -672,8 +685,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
     
         
-    
+    self.guard = OpenRTM_aist.ScopedLock(self._mutex)
     self.calc.document.addActionLock()
+    
     
     for n,op in self._OutPorts.items():
         #m_row = re.split(':',op._row)
@@ -712,6 +726,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
                 pass
 
     self.calc.document.removeActionLock()
+    del self.guard
 
     for n,op in self._ConfOutPorts.items():
         op._num = int(op._col)
@@ -777,8 +792,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     
 
     if int(self.actionLock[0]) == 1:
-        self.calc.document.addActionLock()
         self.guard = OpenRTM_aist.ScopedLock(self._mutex)
+        self.calc.document.addActionLock()
+        
 
     
 
@@ -3280,7 +3296,7 @@ def m_addport(obj1, obj2, c_name):
     obj2.disconnect_all()
 
     # connect ports
-    conprof = RTC.ConnectorProfile("connector0", "", [obj1,obj2], [])
+    conprof = RTC.ConnectorProfile(c_name, "", [obj1,obj2], [])
     OpenRTM_aist.CORBA_SeqUtil.push_back(conprof.properties,
                                     OpenRTM_aist.NVUtil.newNV("dataport.interface_type",
                                                          "corba_cdr"))
@@ -3619,10 +3635,9 @@ class OOoCalc(Bridge):
 def LoadSheet():
     
     if OOoRTC.calc_comp:
-        try:
-          calc = OOoCalc()
-        except NotOOoCalcException:
-          return
+        calc = OOoRTC.calc_comp.calc
+        
+        OOoRTC.calc_comp.m_removeAllPort()
         sheetname = OOoRTC.SetCoding('保存用','utf-8')
         if calc.sheets.hasByName(sheetname):
             sheet = calc.sheets.getByName(sheetname)
@@ -4329,12 +4344,12 @@ class DeleteListener( unohelper.Base, XActionListener ):
                 
                 i = OOoRTC.calc_comp._InPorts[str(ptlist_control.Text)]
                 
-                OOoRTC.calc_comp.m_removeInComp(i)
+                OOoRTC.calc_comp.m_removeInPort(i)
                 DelPortTC(i, self.dlg_control)
                 return
             elif OOoRTC.calc_comp._OutPorts.has_key(str(ptlist_control.Text)) == True:
                 o = OOoRTC.calc_comp._OutPorts[str(ptlist_control.Text)]
-                OOoRTC.calc_comp.m_removeOutComp(o)
+                OOoRTC.calc_comp.m_removeOutPort(o)
                 DelPortTC(o, self.dlg_control)
                 return
 
@@ -4343,12 +4358,12 @@ class DeleteListener( unohelper.Base, XActionListener ):
         if t_comp:
             for n,o in OOoRTC.calc_comp._OutPorts.items():
                 if o._port_a[0] == t_comp[0]:
-                    OOoRTC.calc_comp.m_removeOutComp(o)
+                    OOoRTC.calc_comp.m_removeOutPort(o)
                     DelPortTC(o, self.dlg_control)
                     return
             for n,i in OOoRTC.calc_comp._InPorts.items():
                 if i._port_a[0] == t_comp[0]:
-                    OOoRTC.calc_comp.m_removeInComp(i)
+                    OOoRTC.calc_comp.m_removeInPort(i)
                     DelPortTC(i, self.dlg_control)
                     return
            
@@ -4443,7 +4458,7 @@ def SetDialog():
 
     
     
-    
+    LoadSheet()
     
     
 
