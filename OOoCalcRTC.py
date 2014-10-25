@@ -224,9 +224,13 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
     # @return セルの文字列
     #
     def get_string(self, l, c, sn):
+        guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
         cell, sheet = self.GetCell(l,c,sn)
         if cell:
-                return str(cell.String)
+                ans = str(cell.String)
+                del guard
+                return ans
+        del guard
 
         return "error"
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
@@ -241,10 +245,13 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
     # @param v 設定する値
     ##
     def set_value(self, l, c, sn, v):
+        guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
         cell, sheet = self.GetCell(l,c,sn)
         if cell:
             cell.Value = v
+            del guard
             return
+        del guard
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
         
 
@@ -272,10 +279,13 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
     # @param v 設定する文字列
     #
     def set_string(self, l, c, sn, v):
+        guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
         cell, sheet = self.GetCell(l,c,sn)
         if cell:
             cell.String = v
+            del guard
             return
+        del guard
             
         raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
         # *** Implement me
