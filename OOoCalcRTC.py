@@ -59,6 +59,7 @@ import SpreadSheet_idl
 
 
 import OOoRTC
+import CalcDataPort
 #from SpreadSheet_idl_example import *
 from omniORB import PortableServer
 import SpreadSheet, SpreadSheet__POA
@@ -72,10 +73,10 @@ imp_id = "OOoCalcControl"# + str(comp_num)
 
 
 ##
-# @class m_ControlName
+# @class ControlName
 # @brief ウィジェット名
 #
-class m_ControlName:
+class ControlName:
     NameServerFName = "nameserver"
     CreateBName = "CreateButton"
     DeleteBName = "DeleteButton"
@@ -110,9 +111,9 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "language",          "Python",
                   "lang_type",         "script",
                   "conf.default.actionLock", "1",
-                  "conf.default.Red", "255",
-                  "conf.default.Green", "255",
-                  "conf.default.Blue", "0",
+                  "conf.default.red", "255",
+                  "conf.default.green", "255",
+                  "conf.default.blue", "0",
                   "conf.dataport0.port_type", "DataInPort",
                   "conf.dataport0.data_type", "TimedFloat",
                   "conf.dataport0.column", "1",
@@ -122,9 +123,9 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.dataport0.c_move", "1",
                   "conf.dataport0.Attach_Port", "None",
                   "conf.__widget__.actionLock", "radio",
-                  "conf.__widget__.Red", "spin",
-                  "conf.__widget__.Green", "spin",
-                  "conf.__widget__.Blue", "spin",
+                  "conf.__widget__.red", "spin",
+                  "conf.__widget__.green", "spin",
+                  "conf.__widget__.blue", "spin",
                   "conf.__widget__.file_path", "text",
                   "conf.__widget__.port_type", "radio",
                   "conf.__widget__.column", "spin",
@@ -135,9 +136,9 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.__widget__.c_move", "radio",
                   "conf.__widget__.Attach_Port", "text",
                   "conf.__constraints__.actionLock", "(0,1)",
-                  "conf.__constraints__.Red", "0<=x<=255",
-                  "conf.__constraints__.Green", "0<=x<=255",
-                  "conf.__constraints__.Blue", "0<=x<=255",
+                  "conf.__constraints__.red", "0<=x<=255",
+                  "conf.__constraints__.green", "0<=x<=255",
+                  "conf.__constraints__.blue", "0<=x<=255",
                   "conf.__constraints__.column", "1<=x<=1000",
                   "conf.__constraints__.port_type", "(DataInPort,DataOutPort)",
                   "conf.__constraints__.data_type", """(TimedDouble,TimedLong,TimedFloat,TimedShort,TimedULong,TimedUShort,TimedChar,TimedWChar,
@@ -151,11 +152,11 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   ""]
 
 ##
-# @class MyConfigUpdateParam
+# @class CalcConfigUpdateParam
 # @brief コンフィギュレーションパラメータが更新されたときのコールバック
 #
 
-class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
+class CalcConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
     ##
     # @brief コンストラクタ
     # @param self 
@@ -170,7 +171,7 @@ class MyConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
     # @param config_param_name 
     #
    def __call__(self, config_param_name):
-        self.m_rtc.ConfigUpdate()
+        self.m_rtc.configUpdate()
 
 
 
@@ -201,7 +202,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
     # @return セルオブジェクト、シートオブジェクト
     #
 
-    def GetCell(self, l, c, sn):
+    def getCell(self, l, c, sn):
         if self.m_comp.calc.sheets.hasByName(sn):
             sheet = self.m_comp.calc.sheets.getByName(sn)
             CN = l+c
@@ -225,7 +226,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
     #
     def get_string(self, l, c, sn):
         guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
-        cell, sheet = self.GetCell(l,c,sn)
+        cell, sheet = self.getCell(l,c,sn)
         if cell:
                 ans = str(cell.String)
                 del guard
@@ -246,7 +247,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
     ##
     def set_value(self, l, c, sn, v):
         guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
-        cell, sheet = self.GetCell(l,c,sn)
+        cell, sheet = self.getCell(l,c,sn)
         if cell:
             cell.Value = v
             del guard
@@ -280,7 +281,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
     #
     def set_string(self, l, c, sn, v):
         guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
-        cell, sheet = self.GetCell(l,c,sn)
+        cell, sheet = self.getCell(l,c,sn)
         if cell:
             cell.String = v
             del guard
@@ -318,12 +319,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     #
   def __init__(self, manager):
     OpenRTM_aist.DataFlowComponentBase.__init__(self, manager)
-    self.Num = 0
-    self.Num2 = 0
-    self._OutPorts = {}
-    self._InPorts = {}
-    self._ConfOutPorts = {}
-    self._ConfInPorts = {}
+    self.OutPorts = {}
+    self.InPorts = {}
+    self.ConfOutPorts = {}
+    self.ConfInPorts = {}
 
     self._SpreadSheetPort = OpenRTM_aist.CorbaPort("SpreadSheet")
     self._spreadsheet = mSpreadSheet_i(self)
@@ -341,9 +340,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.conf_end_row = ["A"]
     self.conf_sheetname = ["sheet1"]
     self.actionLock = [1]
-    self.Red = [255]
-    self.Green = [255]
-    self.Blue = [0]
+    self.red = [255]
+    self.green = [255]
+    self.blue = [0]
     self.c_move = [1]
     self.Attach_Port = ["None"]
 
@@ -358,7 +357,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param rate：実行周期
   #
 
-  def m_setRate(self, rate):
+  def mSetRate(self, rate):
       m_ec = self.get_owned_contexts()
       m_ec[0].set_rate(rate)
 
@@ -367,7 +366,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param self 
   #    
 
-  def m_activate(self):
+  def mActivate(self):
       m_ec = self.get_owned_contexts()
       m_ec[0].activate_component(self._objref)
 
@@ -376,7 +375,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param self 
   #
 
-  def m_deactivate(self):
+  def mDeactivate(self):
       m_ec = self.get_owned_contexts()
       m_ec[0].deactivate_component(self._objref)
 
@@ -392,15 +391,15 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param mstate 列を移動するか
   # @param t_attachports 関連付けしたインポート
 
-  def m_addConfOutPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
+  def addConfOutPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
 
-    sig = m_DataType.Single
-    sec = m_DataType.Sequence
-    ext = m_DataType.Extend
+    sig = CalcDataPort.DataType.Single
+    sec = CalcDataPort.DataType.Sequence
+    ext = CalcDataPort.DataType.Extend
 
     
     
-    m_data_o, m_data_type =  GetDataSType(data_type)
+    m_data_o, m_data_type =  CalcDataPort.GetDataSType(data_type)
     
 
     if m_data_o:
@@ -411,11 +410,11 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
         
 
         if m_data_type[1] == sig:
-            self._ConfOutPorts[name] = MyOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+            self.ConfOutPorts[name] = CalcDataPort.CalcOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
         elif m_data_type[1] == sec:
-            self._ConfOutPorts[name] = MyOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+            self.ConfOutPorts[name] = CalcDataPort.CalcOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
         elif m_data_type[1] == ext:
-            self._ConfOutPorts[name] = MyOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+            self.ConfOutPorts[name] = CalcDataPort.CalcOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
 
   ##
   # @brief コンフィギュレーションパラメータによりインポートを追加する関数
@@ -429,32 +428,34 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param mstate 列を移動するか
   # @param t_attachports 関連付けしたアウトポート
   
-  def m_addConfInPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
-    sig = m_DataType.Single
-    sec = m_DataType.Sequence
-    ext = m_DataType.Extend
+  def addConfInPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
+    sig = CalcDataPort.DataType.Single
+    sec = CalcDataPort.DataType.Sequence
+    ext = CalcDataPort.DataType.Extend
 
     
     
-    m_data_i, m_data_type =  GetDataSType(data_type)
+    m_data_i, m_data_type =  CalcDataPort.GetDataSType(data_type)
     
     if m_data_i:
         
         
         m_inport = OpenRTM_aist.InPort(name, m_data_i)
         self.addInPort(name, m_inport)
+
         
         
-        #self._InPorts[name] = MyPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
+        
+        #self.InPorts[name] = CalcDataPort.CalcPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
         if m_data_type[1] == sig:
-            self._ConfInPorts[name] = MyInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+            self.ConfInPorts[name] = CalcDataPort.CalcInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
         elif m_data_type[1] == sec:
-            self._ConfInPorts[name] = MyInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+            self.ConfInPorts[name] = CalcDataPort.CalcInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
         elif m_data_type[1] == ext:
-            self._ConfInPorts[name] = MyInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
+            self.ConfInPorts[name] = CalcDataPort.CalcInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
         
         m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
-                                          DataListener(self._ConfInPorts[name],self))
+                                          DataListener(self.ConfInPorts[name],self))
 
   ##
   # @brief アウトポート追加の関数
@@ -464,29 +465,29 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param row データを書き込む行番号
   # @param sn 接続するインポートのパス
   # @return 追加したアウトポート
-  def m_addOutPort(self, name, m_inport, row, col, mlen, sn, mstate, t_attachports):
+  def mAddOutPort(self, name, m_inport, row, col, mlen, sn, mstate, t_attachports):
 
-    sig = m_DataType.Single
-    sec = m_DataType.Sequence
-    ext = m_DataType.Extend
+    sig = CalcDataPort.DataType.Single
+    sec = CalcDataPort.DataType.Sequence
+    ext = CalcDataPort.DataType.Extend
     
-    m_data_o, m_data_type =  GetDataType(m_inport[1])
+    m_data_o, m_data_type =  CalcDataPort.GetDataType(m_inport[1])
     
 
     if m_data_o:
         
         m_outport = OpenRTM_aist.OutPort(name, m_data_o)
         self.addOutPort(name, m_outport)
-        m_addport(m_inport[1], m_outport._objref, name)
+        OOoRTC.ConnectPort(m_inport[1], m_outport._objref, name)
 
         if m_data_type[1] == sig:
-            self._OutPorts[name] = MyOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
+            self.OutPorts[name] = CalcDataPort.CalcOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
         elif m_data_type[1] == sec:
-            self._OutPorts[name] = MyOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
+            self.OutPorts[name] = CalcDataPort.CalcOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
         elif m_data_type[1] == ext:
-            self._OutPorts[name] = MyOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
+            self.OutPorts[name] = CalcDataPort.CalcOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
         
-        return self._OutPorts[name]
+        return self.OutPorts[name]
 
     return None
                 
@@ -503,32 +504,34 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param sn 書き込むシート
   # @return 追加したインポート
         
-  def m_addInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
-    sig = m_DataType.Single
-    sec = m_DataType.Sequence
-    ext = m_DataType.Extend
+  def mAddInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
+    sig = CalcDataPort.DataType.Single
+    sec = CalcDataPort.DataType.Sequence
+    ext = CalcDataPort.DataType.Extend
     
-    m_data_i, m_data_type =  GetDataType(m_outport[1])
+    m_data_i, m_data_type =  CalcDataPort.GetDataType(m_outport[1])
     
     if m_data_i:
         m_inport = OpenRTM_aist.InPort(name, m_data_i)
         self.addInPort(name, m_inport)
-        m_addport(m_inport._objref, m_outport[1], name)
+        OOoRTC.ConnectPort(m_inport._objref, m_outport[1], name)
+
         
-        #self._InPorts[name] = MyPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
+        
+        #self.InPorts[name] = CalcDataPort.CalcPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
         if m_data_type[1] == sig:
-            self._InPorts[name] = MyInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
+            self.InPorts[name] = CalcDataPort.CalcInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
         elif m_data_type[1] == sec:
-            self._InPorts[name] = MyInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
+            self.InPorts[name] = CalcDataPort.CalcInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
         elif m_data_type[1] == ext:
-            self._InPorts[name] = MyInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
+            self.InPorts[name] = CalcDataPort.CalcInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
 
 
         
         m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
-                                          DataListener(self._InPorts[name], self))
+                                          DataListener(self.InPorts[name], self))
 
-        return self._InPorts[name]
+        return self.InPorts[name]
 
     return None
 
@@ -536,16 +539,16 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @brief データポート全削除の関数
   # @param self 
   #
-  def m_removeAllPort(self):
-      for n,op in self._OutPorts.items():
+  def mRemoveAllPort(self):
+      for n,op in self.OutPorts.items():
           op._port.disconnect_all()
           self.removePort(op._port)
-      self._OutPorts = {}
+      self.OutPorts = {}
 
-      for n,ip in self._InPorts.items():
+      for n,ip in self.InPorts.items():
           ip._port.disconnect_all()
           self.removePort(ip._port)
-      self._InPorts = {}
+      self.InPorts = {}
   
   ##
   # @brief アウトポート削除の関数
@@ -553,10 +556,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param outport 削除するアウトポート
   #
   
-  def m_removeOutPort(self, outport):
+  def mRemoveOutPort(self, outport):
       outport._port.disconnect_all()
       self.removePort(outport._port)
-      del self._OutPorts[outport._name]
+      del self.OutPorts[outport._name]
 
   ##
   # @brief インポート削除の関数
@@ -564,10 +567,10 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param outport 削除するインポート
   #
 
-  def m_removeInPort(self, inport):
+  def mRemoveInPort(self, inport):
       inport._port.disconnect_all()
       self.removePort(inport._port)
-      del self._InPorts[inport._name]
+      del self.InPorts[inport._name]
 
 
   ##
@@ -575,7 +578,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param self 
   #
   
-  def ConfigUpdate(self):
+  def configUpdate(self):
       
       for i in range(0, 100):
           dn = "dataport" + str(i+1)
@@ -589,17 +592,17 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
               
               tdt = ""
               tmp = None
-              if self._ConfInPorts.has_key(dn):
+              if self.ConfInPorts.has_key(dn):
                   if self.conf_port_type[0] != "DataInPort":
-                      del self._ConfInPorts[dn]
+                      del self.ConfInPorts[dn]
                   else:
-                      tmp = self._ConfInPorts[dn]
+                      tmp = self.ConfInPorts[dn]
                       tdt = "DataInPort"
-              if self._ConfOutPorts.has_key(dn):
+              if self.ConfOutPorts.has_key(dn):
                   if self.conf_port_type[0] != "DataOutPort":
-                      del self._ConfOutPorts[dn]
+                      del self.ConfOutPorts[dn]
                   else:
-                      tmp = self._ConfOutPorts[dn]
+                      tmp = self.ConfOutPorts[dn]
                       tdt = "DataOutPort"
 
               data_type = ""
@@ -644,9 +647,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
                       
                       
                       if self.conf_port_type[0] == "DataInPort":
-                        self.m_addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
+                        self.addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
                       elif self.conf_port_type[0] == "DataOutPort":
-                        self.m_addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
+                        self.addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
                       
 
   ##
@@ -662,7 +665,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.addPort(self._SpreadSheetPort)
 
     
-    self.addConfigurationSetListener(OpenRTM_aist.ConfigurationSetListenerType.ON_SET_CONFIG_SET, MyConfigUpdateParam(self))
+    self.addConfigurationSetListener(OpenRTM_aist.ConfigurationSetListenerType.ON_SET_CONFIG_SET, CalcConfigUpdateParam(self))
 
     self.bindParameter("data_type", self.conf_data_type, "TimedFloat")
     self.bindParameter("port_type", self.conf_port_type, "DataInPort")
@@ -671,9 +674,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.bindParameter("end_row", self.conf_end_row, "A")
     self.bindParameter("sheetname", self.conf_sheetname, "sheet1")
     self.bindParameter("actionLock", self.actionLock, "1")
-    self.bindParameter("Red", self.Red, "255")
-    self.bindParameter("Green", self.Green, "255")
-    self.bindParameter("Blue", self.Blue, "0")
+    self.bindParameter("Red", self.red, "255")
+    self.bindParameter("Green", self.green, "255")
+    self.bindParameter("Blue", self.blue, "0")
     self.bindParameter("c_move", self.c_move, "1")
     self.bindParameter("Attach_Port", self.Attach_Port, "None")
     
@@ -699,7 +702,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.calc.document.addActionLock()
     
     
-    for n,op in self._OutPorts.items():
+    for n,op in self.OutPorts.items():
         #m_row = re.split(':',op._row)
         t_n = op._num
         if op.state:
@@ -717,7 +720,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
             except:
                 pass
 
-    for n,op in self._ConfOutPorts.items():
+    for n,op in self.ConfOutPorts.items():
         #m_row = re.split(':',op._row)
         t_n = op._num
         if op.state:
@@ -738,16 +741,16 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     self.calc.document.removeActionLock()
     del self.guard
 
-    for n,op in self._ConfOutPorts.items():
+    for n,op in self.ConfOutPorts.items():
         op._num = int(op._col)
 
-    for n,ip in self._ConfInPorts.items():
+    for n,ip in self.ConfInPorts.items():
         ip._num = int(ip._col)
 
-    for n,op in self._OutPorts.items():
+    for n,op in self.OutPorts.items():
         op._num = int(op._col)
 
-    for n,ip in self._InPorts.items():
+    for n,ip in self.InPorts.items():
         ip._num = int(ip._col)
     
     return RTC.RTC_OK
@@ -756,25 +759,25 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @brief 関連付けたインポート、アウトポートの処理
   # @param self 
   # @param ip インポート
-  # @param _OutPorts アウトポートのリスト
-  # @param _InPorts インポートのリスト
-  def udAPort(self, ip, _OutPorts, _InPorts):
+  # @param OutPorts アウトポートのリスト
+  # @param InPorts インポートのリスト
+  def udAPort(self, ip, OutPorts, InPorts):
       for n,p in ip.attachports.items():
-        if _OutPorts.has_key(p) == True:
-            op = _OutPorts[p]
+        if OutPorts.has_key(p) == True:
+            op = OutPorts[p]
             if len(op.attachports) != 0:
                 Flag = True
                 for i,j in op.attachports.items():
-                    if _InPorts.has_key(j) == True:
-                        #if len(self._InPorts[j].buffdata) == 0:
-                        if _InPorts[j]._port.isNew() != True:
+                    if InPorts.has_key(j) == True:
+                        #if len(self.InPorts[j].buffdata) == 0:
+                        if InPorts[j]._port.isNew() != True:
                             Flag = False
                     else:
                         Flag = False
                 if Flag:
                     self.guard = OpenRTM_aist.ScopedLock(self._mutex)
                     for i,j in op.attachports.items():
-                        _InPorts[j].putData(self)
+                        InPorts[j].putData(self)
                         
                     op.putData(self)
                     del self.guard
@@ -783,9 +786,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @brief インポートと関連付けしたアウトポートのデータ入力後、インポートのデータ出力
   # @param self 
   # @param ip インポート
-  def UpdateAPort(self, ip):
-      self.udAPort(ip, self._OutPorts, self._InPorts)
-      self.udAPort(ip, self._ConfOutPorts, self._ConfInPorts)
+  def updateAPort(self, ip):
+      self.udAPort(ip, self.OutPorts, self.InPorts)
+      self.udAPort(ip, self.ConfOutPorts, self.ConfInPorts)
      
       
 
@@ -810,23 +813,23 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
 
 
 
-    for n,op in self._ConfOutPorts.items():
+    for n,op in self.ConfOutPorts.items():
         if len(op.attachports) == 0:
             op.putData(self)
             
-    for n,ip in self._ConfInPorts.items():
+    for n,ip in self.ConfInPorts.items():
         if len(ip.attachports) == 0:
             ip.putData(self)
 
 
             
     
-    for n,op in self._OutPorts.items():
+    for n,op in self.OutPorts.items():
         
         if len(op.attachports) == 0:
             op.putData(self)
             
-    for n,ip in self._InPorts.items():
+    for n,ip in self.InPorts.items():
         if len(ip.attachports) == 0:
             ip.putData(self)
 
@@ -862,2206 +865,21 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param self 
   #
   def update_cellName(self):
-      for n,op in self._ConfOutPorts.items():
+      for n,op in self.ConfOutPorts.items():
         op.update_cellName(self)
             
-      for n,ip in self._ConfInPorts.items():
+      for n,ip in self.ConfInPorts.items():
         ip.update_cellName(self)
 
 
             
     
-      for n,op in self._OutPorts.items():
+      for n,op in self.OutPorts.items():
         op.update_cellName(self)
             
-      for n,ip in self._InPorts.items():
+      for n,ip in self.InPorts.items():
         ip.update_cellName(self)
 
-
-##
-# @class MyPortObject
-# @brief 追加するポートのクラス
-#
-
-
-class MyPortObject:
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param port データポート
-    # @param data データオブジェクト
-    # @param name データポート名
-    # @param row 行番号
-    # @param col 列番号
-    # @param mlen 行の範囲
-    # @param sn シート名
-    # @param mstate 列を移動するか
-    # @param port_a 接続するデータポート
-    # @param m_dataType データ型
-    # @param t_attachports 関連付けしたデータポート
-    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
-        
-        self._port = port
-        self._data = data
-        self._name = name
-        
-        
-        self._num = int(col)
-
-        
-        
-        self._row = row
-        self._length = mlen
-        
-        self._sn = sn
-        self._port_a = port_a
-        self._dataType = m_dataType
-        self.buffdata = []
-        self.attachports = t_attachports 
-        self.state = mstate
-        self._col = col
-
-        self._mutex = threading.RLock()
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def update_cellName(self, m_cal):
-        if m_cal.calc.sheets.hasByName(self._sn):
-            sheet = m_cal.calc.sheets.getByName(self._sn)
-            if self._length == "":
-                CN = self._row + str(self._col)
-            else:
-                CN = self._row + str(self._col) + ':' + self._length + str(self._col)
-            try:
-                cell = sheet.getCellRangeByName(CN)
-                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-                m_len = m_len + 1
-
-                self.update_cellNameSub(cell, m_len)
-
-                
-                            
-            except:
-                return
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSub(self, cell, m_len):
-        pass
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSingle(self, cell, m_len):
-        cell.getCellByPosition(0, 0).String = self._name
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSeq(self, cell, m_len):
-        for j in range(0, m_len):
-            cell.getCellByPosition(j, 0).String = self._name + ":" + str(j)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameEx(self, cell, m_len):
-        b = self._name + ":"
-        count = [0]
-        if self._dataType[3] == "TimedRGBColour":
-            if self.input_cellNameEx(b + str("r"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("g"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("b"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedPoint2D":
-            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedVector2D":
-            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedPose2D":
-            if self.input_cellNameEx(b + str("position.x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("heading"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedVelocity2D":
-            if self.input_cellNameEx(b + str("vx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("vy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("va"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedAcceleration2D":
-            if self.input_cellNameEx(b + str("ax"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("ay"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedPoseVel2D":
-            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.heading"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.vx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.vy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.va"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedSize2D":
-            if self.input_cellNameEx(b + str("l"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("w"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedGeometry2D":
-            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.heading"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("size.l"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("size.w"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedCovariance2D":
-            if self.input_cellNameEx(b + str("xx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xt"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("yy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("yt"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("tt"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedPointCovariance2D":
-            if self.input_cellNameEx(b + str("xx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("yy"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedCarlike":
-            if self.input_cellNameEx(b + str("speed"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("steeringAngle"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedSpeedHeading2D":
-            if self.input_cellNameEx(b + str("speed"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("heading"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedPoint3D":
-            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("z"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedVector3D":
-            if self.input_cellNameEx(b + str("x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("z"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedOrientation3D":
-            if self.input_cellNameEx(b + str("r"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("p"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("y"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedPose3D":
-            if self.input_cellNameEx(b + str("position.x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.z"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.r"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.p"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.y"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedVelocity3D":
-            if self.input_cellNameEx(b + str("vx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("vy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("vz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("vr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("vp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("va"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedAngularVelocity3D":
-            if self.input_cellNameEx(b + str("avx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("avy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("avz"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedAcceleration3D":
-            if self.input_cellNameEx(b + str("ax"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("ay"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("az"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedAngularAcceleration3D":
-            if self.input_cellNameEx(b + str("aax"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("aay"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("aaz"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedPoseVel3D":
-            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.position.z"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.orientation.r"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.orientation.p"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.orientation.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.vx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.vy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.vz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.vr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.vp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("velocities.va"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedSize3D":
-            if self.input_cellNameEx(b + str("l"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("w"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("h"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedGeometry3D":
-            if self.input_cellNameEx(b + str("pose.position.x"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.position.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.position.z"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.orientation.r"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.orientation.p"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pose.orientation.y"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("size.l"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("size.w"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("size.h"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedCovariance3D":
-            if self.input_cellNameEx(b + str("xx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("xa"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("yy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("yz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("yr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("ya"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("zz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("za"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("rr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("rp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("ra"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("pa"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("aa"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedSpeedHeading3D":
-            if self.input_cellNameEx(b + str("speed"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("direction.r"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("direction.p"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("direction.y"), count, m_len, cell) == False:
-                return
-        if self._dataType[3] == "TimedOAP":
-            if self.input_cellNameEx(b + str("orientation.vx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.vy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.vz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.vr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.vp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("orientation.va"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("approach.vx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("approach.vy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("approach.vz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("approach.vr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("approach.vp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("approach.va"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.vx"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.vy"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.vz"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.vr"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.vp"), count, m_len, cell) == False:
-                return
-            if self.input_cellNameEx(b + str("position.va"), count, m_len, cell) == False:
-                return
-
-    ##
-    # @brief 
-    # @param self 
-    # @param b データ名
-    # @param count カウンター
-    # @param m_len 行の範囲
-    # @param cell セルオブジェクト
-    # @return 
-    def input_cellNameEx(self, b, count, m_len, cell):
-        
-        cell.getCellByPosition(count[0], 0).String = b
-        
-                    
-        count[0] += 1
-        if count[0] >= m_len:
-            return False
-        return True
-            
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putData(self, m_cal):
-        pass
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def GetCell(self, m_cal):
-        if m_cal.calc.sheets.hasByName(self._sn):
-            sheet = m_cal.calc.sheets.getByName(self._sn)
-
-            if self._length == "":
-                CN = self._row + str(self._num)
-            else:
-                CN = self._row + str(self._num) + ':' + self._length + str(self._num)
-            try:
-                cell = sheet.getCellRangeByName(CN)
-            except:
-                pass
-            
-            return cell, sheet
-        else:
-            return None
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param b データ
-    def updateIn(self, cell, b):
-        pass
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putIn(self, m_cal):
-        m_string = m_DataType.String
-        m_value = m_DataType.Value
-
-        tmbd = []
-        
-
-        if len(self.attachports) != 0:
-            self.buffdata = []
-            if self._port.isNew():
-                data = self._port.read()
-                self.buffdata = [data.data]
-
-        guard = OpenRTM_aist.ScopedLock(self._mutex)
-        tmbd = self.buffdata[:]
-        self.buffdata = []
-        del guard
-    
-        tms = len(tmbd)-1
-        if self.state:
-            tms = 0
-        for b in tmbd:
-            sheetname = self._sn
-            
-            cell, sheet = self.GetCell(m_cal)
-
-            if cell != None:
-                self.updateIn(cell, b)
-
-        
-                    
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param sheet シートオブジェクト
-    # @param m_cal OOoCalcRTC
-    def putOut(self, cell, sheet, m_cal):
-        m_string = m_DataType.String
-        m_value = m_DataType.Value
-
-        cell.CellBackColor = OOoRTC.RGB(int(m_cal.Red[0]), int(m_cal.Green[0]), int(m_cal.Blue[0]))
-        
-        if self._dataType[2] == m_string:
-            if  self._length == "":
-                val = cell.String
-            else:
-                val = []
-                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-                for i in range(0, m_len+1):
-                    val.append(cell.getCellByPosition(i, 0).String)
-        elif self._dataType[2] == m_value:
-            if self._length == "":
-                val = cell.Value
-            else:
-                val = []
-                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-                for i in range(0, m_len+1):
-                    val.append(cell.getCellByPosition(i, 0).Value)
-                    
-        
-                
-        if self._num > 1 and self.state == True:
-            t_n = self._num -1
-            if self._length == "":
-                CN2 = self._row + str(t_n)
-            else:
-                CN2 = self._row + str(t_n) + ':' + self._length + str(t_n)
-
-            try:
-                cell2 = sheet.getCellRangeByName(CN2)
-                cell2.CellBackColor = OOoRTC.RGB(255, 255, 255)
-            except:
-                pass
-
-
-        return val
-
-##
-# @class MyInPort
-# @brief
-#
-
-class MyInPort(MyPortObject):
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param port データポート
-    # @param data データオブジェクト
-    # @param name データポート名
-    # @param row 行番号
-    # @param col 列番号
-    # @param mlen 行の範囲
-    # @param sn シート名
-    # @param mstate 列を移動するか
-    # @param port_a 接続するデータポート
-    # @param m_dataType データ型
-    # @param t_attachports 関連付けしたデータポート
-    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
-        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putData(self, m_cal):
-        self.putIn(m_cal)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param b データ
-    def updateIn(self, cell, b):
-        m_string = m_DataType.String
-        m_value = m_DataType.Value
-        
-        m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-        m_len = m_len + 1
-        if self._dataType[2] == m_string:
-            cell.getCellByPosition(0, 0).String = b
-        elif self._dataType[2] == m_value:
-            cell.getCellByPosition(0, 0).Value = b
-        if self.state:
-            self._num = self._num + 1
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSub(self, cell, m_len):
-        self.update_cellNameSingle(cell, m_len)
-
-        
-                    
-##
-# @class MyInPortSeq
-# @brief 
-class MyInPortSeq(MyPortObject):
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param port データポート
-    # @param data データオブジェクト
-    # @param name データポート名
-    # @param row 行番号
-    # @param col 列番号
-    # @param mlen 行の範囲
-    # @param sn シート名
-    # @param mstate 列を移動するか
-    # @param port_a 接続するデータポート
-    # @param m_dataType データ型
-    # @param t_attachports 関連付けしたデータポート
-    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
-        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putData(self, m_cal):
-        self.putIn(m_cal)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param b データ
-    def updateIn(self, cell, b):
-        m_string = m_DataType.String
-        m_value = m_DataType.Value
-        
-        m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-        m_len = m_len + 1
-
-        for j in range(0, len(b)):
-            if m_len > j:
-                if self._dataType[2] == m_string:
-                    cell.getCellByPosition(j, 0).String = b[j]
-                elif self._dataType[2] == m_value:
-                    cell.getCellByPosition(j, 0).Value = b[j]
-
-        if self.state:
-            self._num = self._num + 1
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSub(self, cell, m_len):
-        self.update_cellNameSeq(cell, m_len)
-
-##
-# @class MyInPortEx
-# @brief 
-class MyInPortEx(MyPortObject):
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param port データポート
-    # @param data データオブジェクト
-    # @param name データポート名
-    # @param row 行番号
-    # @param col 列番号
-    # @param mlen 行の範囲
-    # @param sn シート名
-    # @param mstate 列を移動するか
-    # @param port_a 接続するデータポート
-    # @param m_dataType データ型
-    # @param t_attachports 関連付けしたデータポート
-    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
-        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putData(self, m_cal):
-        self.putIn(m_cal)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param b データ
-    def update_cellNameSub(self, cell, m_len):
-        self.update_cellNameEx(cell, m_len)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param b データ
-    def updateIn(self, cell, b):
-        m_string = m_DataType.String
-        m_value = m_DataType.Value
-        m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-        m_len = m_len + 1
-
-        count = [0]
-
-        if self.state:
-            self._num = self._num + 1
-
-        if self._dataType[3] == "TimedRGBColour":
-            if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.g, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.b, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoint2D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVector2D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPose2D":
-            if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVelocity2D":
-            if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAcceleration2D":
-            if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoseVel2D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSize2D":
-            if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedGeometry2D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedCovariance2D":
-            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xt, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yt, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.tt, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPointCovariance2D":
-            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedCarlike":
-            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.steeringAngle, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSpeedHeading2D":
-            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoint3D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVector3D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedOrientation3D":
-            if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPose3D":
-            if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.z, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVelocity3D":
-            if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAngularVelocity3D":
-            if self.putDataEx(b.avx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.avy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.avz, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAcceleration3D":
-            if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.az, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAngularAcceleration3D":
-            if self.putDataEx(b.aax, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.aay, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.aaz, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoseVel3D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSize3D":
-            if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.h, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedGeometry3D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.h, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedCovariance3D":
-            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xa, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ya, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.zz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.za, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.rr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.rp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ra, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pa, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.aa, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSpeedHeading3D":
-            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.direction.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.direction.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.direction.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedOAP":
-            if self.putDataEx(b.orientation.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.va, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.va, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.va, count, m_len, cell, m_value) == False:
-                return
-        
-        
-        
-        
-
-    ##
-    # @brief
-    # @param self 
-    # @param b データ
-    # @param count カウンター
-    # @param m_len 行の範囲
-    # @param cell セルオブジェクト
-    # @param d_type データタイプ
-    def putDataEx(self, b, count, m_len, cell, d_type):
-        m_string = m_DataType.String
-        m_value = m_DataType.Value
-
-        if d_type == m_string:
-            cell.getCellByPosition(count[0], 0).String = b
-        elif d_type == m_value:
-            cell.getCellByPosition(count[0], 0).Value = b
-                    
-        count[0] += 1
-        if count[0] >= m_len:
-            return False
-        return True
-
-        
-##
-# @class MyOutPort
-# @brief 
-class MyOutPort(MyPortObject):
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param port データポート
-    # @param data データオブジェクト
-    # @param name データポート名
-    # @param row 行番号
-    # @param col 列番号
-    # @param mlen 行の範囲
-    # @param sn シート名
-    # @param mstate 列を移動するか
-    # @param port_a 接続するデータポート
-    # @param m_dataType データ型
-    # @param t_attachports 関連付けしたデータポート
-    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
-        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
-
-    ##
-    # @brief
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putData(self, m_cal):
-        cell, sheet = self.GetCell(m_cal)
-
-        if cell != None:
-            val = self.putOut(cell, sheet, m_cal)
-            if self._length == "":
-                if val != "":
-                    self._data.data = self._dataType[0](val)
-                    OpenRTM_aist.setTimestamp(self._data)
-                    self._port.write()
-                    if self.state:
-                        self._num = self._num + 1
-            else:
-                flag = True
-                if val[0] != "":
-                    self._data.data = self._dataType[0](val[0])
-                else:
-                    flag = False
-
-                if flag:
-                    OpenRTM_aist.setTimestamp(self._data)
-                    self._port.write()
-                    if self.state:
-                        self._num = self._num + 1
-
-    ##
-    # @brief
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSub(self, cell, m_len):
-        self.update_cellNameSingle(cell, m_len)
-
-##
-# @class MyOutPortSeq
-# @brief 
-class MyOutPortSeq(MyPortObject):
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param port データポート
-    # @param data データオブジェクト
-    # @param name データポート名
-    # @param row 行番号
-    # @param col 列番号
-    # @param mlen 行の範囲
-    # @param sn シート名
-    # @param mstate 列を移動するか
-    # @param port_a 接続するデータポート
-    # @param m_dataType データ型
-    # @param t_attachports 関連付けしたデータポート
-    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
-        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
-
-    ##
-    # @brief 
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putData(self, m_cal):
-        cell, sheet = self.GetCell(m_cal)
-
-        if cell != None:
-            val = self.putOut(cell, sheet, m_cal)
-            if self._length == "":
-                if val != "":
-                    self._data.data = self._dataType[0](val)
-                    OpenRTM_aist.setTimestamp(self._data)
-                    self._port.write()
-                    if self.state:
-                        self._num = self._num + 1
-            else:
-                flag = True
-                self._data.data = []
-                for v in val:
-                    if v != "":
-                        self._data.data.append(self._dataType[0](v))
-                    else:
-                        flag = False
-
-                if flag:
-                    OpenRTM_aist.setTimestamp(self._data)
-                    self._port.write()
-                    if self.state:
-                        self._num = self._num + 1
-
-    ##
-    # @brief 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSub(self, cell, m_len):
-        self.update_cellNameSeq(cell, m_len)
-
-##
-# @class MyOutPortEx
-# @brief 
-#
-class MyOutPortEx(MyPortObject):
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param port データポート
-    # @param data データオブジェクト
-    # @param name データポート名
-    # @param row 行番号
-    # @param col 列番号
-    # @param mlen 行の範囲
-    # @param sn シート名
-    # @param mstate 列を移動するか
-    # @param port_a 接続するデータポート
-    # @param m_dataType データ型
-    # @param t_attachports 関連付けしたデータポート
-    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
-        MyPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
-
-    ##
-    # @brief
-    # @param self 
-    # @param cell セルオブジェクト
-    # @param m_len 行の範囲
-    def update_cellNameSub(self, cell, m_len):
-        self.update_cellNameEx(cell, m_len)
-
-    ##
-    # @brief
-    # @param self 
-    # @param m_cal OOoCalcRTC
-    def putData(self, m_cal):
-        
-        m_string = m_DataType.String
-        m_value = m_DataType.Value
-        
-        
-
-        count = [0]
-
-        
-
-        cell, sheet = self.GetCell(m_cal)
-        
-
-        if cell != None:
-            val = self.putOut(cell, sheet, m_cal)
-            
-            if self._length == "":
-                val = [val]
-
-
-            if self._dataType[3] == "TimedRGBColour":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.r = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.g = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.b = ans
-                else:
-                    return
-            if self._dataType[3] == "TimedPoint2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.x = ans
-                else:
-                    return
-                
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.y = ans
-                else:
-                    return
-            if self._dataType[3] == "TimedVector2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.y = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedPose2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.heading = ans
-                else:
-                    return
-                     
-            if self._dataType[3] == "TimedVelocity2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.va = ans
-                else:
-                    return
-                    
-            if self._dataType[3] == "TimedAcceleration2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.ax = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.ay = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedPoseVel2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.heading = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.vx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.vy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.va = ans
-                else:
-                    return
-                    
-            if self._dataType[3] == "TimedSize2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.l = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.w = ans
-                else:
-                    return
-
-            if self._dataType[3] == "TimedGeometry2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.heading = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.size.l = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.size.w = ans
-                else:
-                    return
-            if self._dataType[3] == "TimedCovariance2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xt = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.yy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.yt = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.tt = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedPointCovariance2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.yy = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedCarlike":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.speed = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.steeringAngle = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedSpeedHeading2D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.speed = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.heading = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedPoint3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.z = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedVector3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.z = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedOrientation3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.r = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.p = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.y = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedPose3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.z = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.r = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.p = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.y = ans
-                else:
-                    return
-                    
-                
-            if self._dataType[3] == "TimedVelocity3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.vp = ans
-                else:
-                    return
-            if self._dataType[3] == "TimedAngularVelocity3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.avx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.avy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.avz = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedAcceleration3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.ax = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.ay = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.az = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedAngularAcceleration3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.aax = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.aay = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.aaz = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedPoseVel3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.z = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.orientation.r = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.orientation.p = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.orientation.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.vx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.vy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.vz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.vr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.vp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.velocities.va = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedSize3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.l = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.w = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.h = ans
-                else:
-                    return
-                    
-            if self._dataType[3] == "TimedGeometry3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.x = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.position.z = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.orientation.r = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.orientation.p = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pose.orientation.y = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.size.l = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.size.w = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.size.h = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedCovariance3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.xa = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.yy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.yz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.yr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.ya = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.zz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.za = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.rr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.rp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.ra = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.pa = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.aa = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedSpeedHeading3D":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.speed = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.direction.r = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.direction.p = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.direction.y = ans
-                else:
-                    return
-                
-            if self._dataType[3] == "TimedOAP":
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.vx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.vy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.vz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.vr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.vp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.orientation.va = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.approach.vx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.approach.vy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.approach.vz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.approach.vr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.approach.vp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.approach.va = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.vx = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.vy = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.vz = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.vr = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.vp = ans
-                else:
-                    return
-                ans = self.putDataEx(count, val, m_value)
-                if ans != None:
-                    self._data.data.position.va = ans
-                else:
-                    return
-            OpenRTM_aist.setTimestamp(self._data)
-            self._port.write()
-            if self.state:
-                self._num = self._num + 1
-
-            
-        
-        
-        
-        
-    ##
-    # @brief 
-    # @param count カウンター
-    # @param val データ配列
-    # @param d_type データタイプ
-    def putDataEx(self, count, val, d_type):
-        
-        if count[0] < len(val):
-            count[0] += 1
-            return val[count[0]-1]
-        else:
-            return None
-
-    
-##
-# @class m_DataType
-# @brief データのタイプ
-#
-
-class m_DataType:
-    Single = 0
-    Sequence = 1
-    Extend = 2
-
-    String = 0
-    Value = 1
-    def __init__(self):
-        pass
-
-
-##
-# @brief
-# @param data_type データ型
-# @return データオブジェクト、[データ型、データのタイプ、データ型の名前]
-def GetDataSType(data_type):
-    sig = m_DataType.Single
-    sec = m_DataType.Sequence
-    ext = m_DataType.Extend
-
-    m_string = m_DataType.String
-    m_value = m_DataType.Value
-    
-    if data_type == 'TimedDouble':
-        dt = RTC.TimedDouble(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value, data_type]
-    elif data_type == 'TimedLong':
-        dt = RTC.TimedLong(RTC.Time(0,0),0)
-        return dt, [long, sig, m_value, data_type]
-    elif data_type == 'TimedFloat':
-        dt = RTC.TimedFloat(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value, data_type]
-    elif data_type == 'TimedInt':
-        dt = RTC.TimedInt(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value, data_type]
-    elif data_type == 'TimedShort':
-        dt = RTC.TimedShort(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value, data_type]
-    elif data_type == 'TimedUDouble':
-        dt = RTC.TimedUDouble(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value, data_type]
-    elif data_type == 'TimedULong':
-        dt = RTC.TimedULong(RTC.Time(0,0),0)
-        return dt, [long, sig, m_value, data_type]
-    elif data_type == 'TimedUFloat':
-        dt = RTC.TimedUFloat(RTC.Time(0,0),0)
-        return dt, [float, sig, m_value, data_type]
-    elif data_type == 'TimedUInt':
-        dt = RTC.TimedUInt(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value, data_type]
-    elif data_type == 'TimedUShort':
-        dt = RTC.TimedUShort(RTC.Time(0,0),0)
-        return dt, [int, sig, m_value, data_type]
-    elif data_type == 'TimedChar':
-        dt = RTC.TimedChar(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string, data_type]
-    elif data_type == 'TimedWChar':
-        dt = RTC.TimedWChar(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string, data_type]
-    elif data_type == 'TimedBoolean':
-        dt = RTC.TimedBoolean(RTC.Time(0,0),0)
-        return dt, [bool, sig, m_value, data_type]
-    elif data_type == 'TimedOctet':
-        dt = RTC.TimedOctet(RTC.Time(0,0),0)
-        return dt, [chr, sig, m_value, data_type]
-    elif data_type == 'TimedString':
-        dt = RTC.TimedString(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string, data_type]
-    elif data_type == 'TimedWString':
-        dt = RTC.TimedWString(RTC.Time(0,0),0)
-        return dt, [str, sig, m_string, data_type]
-    elif data_type == 'TimedDoubleSeq':
-        dt = RTC.TimedDoubleSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value, data_type]
-    elif data_type == 'TimedLongSeq':
-        dt = RTC.TimedLongSeq(RTC.Time(0,0),[])
-        return dt, [long, sec, m_value, data_type]
-    elif data_type == 'TimedFloatSeq':
-        dt = RTC.TimedFloatSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value, data_type]
-    elif data_type == 'TimedIntSeq':
-        dt = RTC.TimedIntSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value, data_type]
-    elif data_type == 'TimedShortSeq':
-        dt = RTC.TimedShortSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value, data_type]
-    elif data_type == 'TimedUDoubleSeq':
-        dt = RTC.TimedUDoubleSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value, data_type]
-    elif data_type == 'TimedULongSeq':
-        dt = RTC.TimedULongSeq(RTC.Time(0,0),[])
-        return dt, [long, sec, m_value, data_type]
-    elif data_type == 'TimedUFloatSeq':
-        dt = RTC.TimedUFloatSeq(RTC.Time(0,0),[])
-        return dt, [float, sec, m_value, data_type]
-    elif data_type == 'TimedUIntSeq':
-        dt = RTC.TimedUIntSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value, data_type]
-    elif data_type == 'TimedUShortSeq':
-        dt = RTC.TimedUShortSeq(RTC.Time(0,0),[])
-        return dt, [int, sec, m_value, data_type]
-    elif data_type == 'TimedCharSeq':
-        dt = RTC.TimedCharSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string, data_type]
-    elif data_type == 'TimedWCharSeq':
-        dt = RTC.TimedWCharSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string, data_type]
-    elif data_type == 'TimedBooleanSeq':
-        dt = RTC.TimedBooleanSeq(RTC.Time(0,0),[])
-        return dt, [bool, sec, m_value, data_type]
-    elif data_type == 'TimedOctetSeq':
-        dt = RTC.TimedOctetSeq(RTC.Time(0,0),[])
-        return dt, [chr, sec, m_value, data_type]
-    elif data_type == 'TimedStringSeq':
-        dt = RTC.TimedStringSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string, data_type]
-    elif data_type == 'TimedWStringSeq':
-        dt = RTC.TimedWStringSeq(RTC.Time(0,0),[])
-        return dt, [str, sec, m_string, data_type]
-    elif data_type == "TimedRGBColour":
-        dt = RTC.TimedRGBColour(RTC.Time(0,0),RTC.RGBColour(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedPoint2D":
-        dt = RTC.TimedPoint2D(RTC.Time(0,0),RTC.Point2D(0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedVector2D":
-        dt = RTC.TimedVector2D(RTC.Time(0,0),RTC.Vector2D(0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedPose2D":
-        dt = RTC.TimedPose2D(RTC.Time(0,0),RTC.Pose2D(RTC.Point2D(0,0),0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedVelocity2D":
-        dt = RTC.TimedVelocity2D(RTC.Time(0,0),RTC.Velocity2D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedAcceleration2D":
-        dt = RTC.TimedAcceleration2D(RTC.Time(0,0),RTC.Acceleration2D(0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedPoseVel2D":
-        dt = RTC.TimedPoseVel2D(RTC.Time(0,0),RTC.PoseVel2D(RTC.Pose2D(RTC.Point2D(0,0),0),RTC.Velocity2D(0,0,0)))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedSize2D":
-        dt = RTC.TimedSize2D(RTC.Time(0,0),RTC.Size2D(0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedGeometry2D":
-        dt = RTC.TimedGeometry2D(RTC.Time(0,0),RTC.Geometry2D(RTC.Point2D(0,0),RTC.Size2D(0,0)))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedCovariance2D":
-        dt = RTC.TimedCovariance2D(RTC.Time(0,0),RTC.Covariance2D(0,0,0,0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedPointCovariance2D":
-        dt = RTC.TimedPointCovariance2D(RTC.Time(0,0),RTC.PointCovariance2D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedCarlike":
-        dt = RTC.TimedCarlike(RTC.Time(0,0),RTC.Carlike(0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedSpeedHeading2D":
-        dt = RTC.TimedSpeedHeading2D(RTC.Time(0,0),RTC.SpeedHeading2D(0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedPoint3D":
-        dt = RTC.TimedPoint3D(RTC.Time(0,0),RTC.Point3D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedVector3D":
-        dt = RTC.TimedVector3D(RTC.Time(0,0),RTC.Vector3D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedOrientation3D":
-        dt = RTC.TimedOrientation3D(RTC.Time(0,0),RTC.Orientation3D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedPose3D":
-        dt = RTC.TimedPose3D(RTC.Time(0,0),RTC.Pose3D(RTC.Point3D(0,0,0), RTC.Orientation3D(0,0,0)))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedVelocity3D":
-        dt = RTC.TimedVelocity3D(RTC.Time(0,0),RTC.Velocity3D(0,0,0,0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedAngularVelocity3D":
-        dt = RTC.TimedAngularVelocity3D(RTC.Time(0,0),RTC.AngularVelocity3D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedAcceleration3D":
-        dt = RTC.TimedAcceleration3D(RTC.Time(0,0),RTC.Acceleration3D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedAngularAcceleration3D":
-        dt = RTC.TimedAngularAcceleration3D(RTC.Time(0,0),RTC.AngularAcceleration3D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedPoseVel3D":
-        dt = RTC.TimedPoseVel3D(RTC.Time(0,0),RTC.PoseVel3D(RTC.Pose3D(RTC.Point3D(0,0,0), RTC.Orientation3D(0,0,0)),RTC.Velocity3D(0,0,0,0,0,0)))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedSize3D":
-        dt = RTC.TimedSize3D(RTC.Time(0,0),RTC.Size3D(0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedGeometry3D":
-        dt = RTC.TimedGeometry3D(RTC.Time(0,0),RTC.Geometry3D(RTC.Pose3D(RTC.Point3D(0,0,0), RTC.Orientation3D(0,0,0)),RTC.Size3D(0,0,0)))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedCovariance3D":
-        dt = RTC.TimedCovariance3D(RTC.Time(0,0),RTC.Covariance3D(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedSpeedHeading3D":
-        dt = RTC.TimedSpeedHeading3D(RTC.Time(0,0),RTC.SpeedHeading3D(0,RTC.Orientation3D(0,0,0)))
-        return dt, [str, ext, m_value, data_type]
-    elif data_type == "TimedOAP":
-        dt = RTC.TimedOAP(RTC.Time(0,0),RTC.OAP(RTC.Velocity3D(0,0,0,0,0,0),RTC.Velocity3D(0,0,0,0,0,0),RTC.Velocity3D(0,0,0,0,0,0)))
-        return dt, [str, ext, m_value, data_type]
-    else:
-        return None
-    
-
-##
-# @brief データポートのデータ型を返す関数
-# @param m_port データポート
-# @return データオブジェクト、[データ型、データのタイプ、データ型の名前]
-#
-        
-def GetDataType(m_port):
-    
-
-    m_string = m_DataType.String
-    m_value = m_DataType.Value
-    
-    profile = m_port.get_port_profile()
-    props = nvlist_to_dict(profile.properties)
-    data_type =  props['dataport.data_type']
-    if data_type.startswith('IDL:'):
-        data_type = data_type[4:]
-    colon = data_type.rfind(':')
-    if colon != -1:
-        data_type = data_type[:colon]
-
-    data_type = data_type.replace('RTC/','')
-
-    return GetDataSType(data_type)
 
     
 
@@ -3075,14 +893,14 @@ def GetDataType(m_port):
 
 def Start():
     if OOoRTC.calc_comp:
-        OOoRTC.calc_comp.m_activate()
+        OOoRTC.calc_comp.mActivate()
 
 ##
 # @brief コンポーネントを不活性化してCalcの操作を終了する関数
 #
 def Stop():
     if OOoRTC.calc_comp:
-        OOoRTC.calc_comp.m_deactivate()
+        OOoRTC.calc_comp.mDeactivate()
 ##
 # @brief コンポーネントの実行周期を設定する関数
 #
@@ -3112,7 +930,7 @@ def Set_Rate():
                   except:
                       return
                   
-                  OOoRTC.calc_comp.m_setRate(text)
+                  OOoRTC.calc_comp.mSetRate(text)
 
 
       
@@ -3155,7 +973,7 @@ class DataListener(OpenRTM_aist.ConnectorDataListenerT):
     del guard
 
     
-    self.m_rtc.UpdateAPort(self.m_port)
+    self.m_rtc.updateAPort(self.m_port)
     
 
 
@@ -3192,11 +1010,11 @@ def MyModuleInit(manager):
 # @param dlg_control ダイアログオブジェクト
 def CompAddOutPort(name, i_port, dlg_control):
     if OOoRTC.calc_comp != None:
-        tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
-        tfc_control = dlg_control.getControl( m_ControlName.ColTName )
-        mlen_control = dlg_control.getControl( m_ControlName.LenTName )
-        tfst_control = dlg_control.getControl( m_ControlName.SheetCBName )
-        cb_control = dlg_control.getControl( m_ControlName.LCBName )
+        tfrow_control = dlg_control.getControl( ControlName.RowFName )
+        tfc_control = dlg_control.getControl( ControlName.ColTName )
+        mlen_control = dlg_control.getControl( ControlName.LenTName )
+        tfst_control = dlg_control.getControl( ControlName.SheetCBName )
+        cb_control = dlg_control.getControl( ControlName.LCBName )
         
         row = str(tfrow_control.Text)
         sn = str(tfst_control.Text)
@@ -3211,7 +1029,7 @@ def CompAddOutPort(name, i_port, dlg_control):
 
         
         
-        tcomp = OOoRTC.calc_comp.m_addOutPort(name, i_port, row, col, mlen, sn, mst, {})
+        tcomp = OOoRTC.calc_comp.mAddOutPort(name, i_port, row, col, mlen, sn, mst, {})
         if tcomp:
             tcomp.update_cellName(OOoRTC.calc_comp)
 
@@ -3222,11 +1040,11 @@ def CompAddOutPort(name, i_port, dlg_control):
 # @param dlg_control ダイアログオブジェクト
 def CompAddInPort(name, o_port, dlg_control):
     if OOoRTC.calc_comp != None:
-        tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
-        tfc_control = dlg_control.getControl( m_ControlName.ColTName )
-        mlen_control = dlg_control.getControl( m_ControlName.LenTName )
-        tfst_control = dlg_control.getControl( m_ControlName.SheetCBName )
-        cb_control = dlg_control.getControl( m_ControlName.LCBName )
+        tfrow_control = dlg_control.getControl( ControlName.RowFName )
+        tfc_control = dlg_control.getControl( ControlName.ColTName )
+        mlen_control = dlg_control.getControl( ControlName.LenTName )
+        tfst_control = dlg_control.getControl( ControlName.SheetCBName )
+        cb_control = dlg_control.getControl( ControlName.LCBName )
         
         row = str(tfrow_control.Text)
         sn = str(tfst_control.Text)
@@ -3236,7 +1054,7 @@ def CompAddInPort(name, o_port, dlg_control):
         mst = True
         if mstate == 0:
             mst = False
-        tcomp = OOoRTC.calc_comp.m_addInPort(name, o_port, row, col, mlen, sn, mst, {})
+        tcomp = OOoRTC.calc_comp.mAddInPort(name, o_port, row, col, mlen, sn, mst, {})
         if tcomp:
             tcomp.update_cellName(OOoRTC.calc_comp)
 
@@ -3245,7 +1063,10 @@ def CompAddInPort(name, o_port, dlg_control):
 #
 
 def createOOoCalcComp():
-
+    if OOoRTC.calc_comp:
+        MyMsgBox('',OOoRTC.SetCoding('RTCは起動済みです','utf-8'))
+        return
+    
     if OOoRTC.mgr == None:
         if os.name == 'posix':
             home = expanduser("~")
@@ -3290,36 +1111,7 @@ def createOOoCalcComp():
     
     return
 
-##
-# @brief ポートを接続する関数
-# @param obj1 接続するデータポート
-# @param obj2 接続するデータポート
-# @param c_name コネクタ名
-#
 
-def m_addport(obj1, obj2, c_name):
-
-    subs_type = "Flush"
-
-    obj1.disconnect_all()
-    
-    obj2.disconnect_all()
-
-    # connect ports
-    conprof = RTC.ConnectorProfile(c_name, "", [obj1,obj2], [])
-    OpenRTM_aist.CORBA_SeqUtil.push_back(conprof.properties,
-                                    OpenRTM_aist.NVUtil.newNV("dataport.interface_type",
-                                                         "corba_cdr"))
-
-    OpenRTM_aist.CORBA_SeqUtil.push_back(conprof.properties,
-                                    OpenRTM_aist.NVUtil.newNV("dataport.dataflow_type",
-                                                         "push"))
-
-    OpenRTM_aist.CORBA_SeqUtil.push_back(conprof.properties,
-                                    OpenRTM_aist.NVUtil.newNV("dataport.subscription_type",
-                                                         subs_type))
-
-    ret = obj2.connect(conprof)
 
 
 ##
@@ -3359,180 +1151,9 @@ class Bridge(object):
         msgbox.execute()
         msgbox.dispose()
 
-##
-# @brief ネーミングサービスへ接続する関数
-# @param s_name ネームサーバーの名前
-# @param orb ORBオブジェクト
-# @return ネーミングコンテキスト
-def SetNamingServer(s_name, orb):
-    
-    try:
-        namingserver = CorbaNaming(orb, s_name)
-    except:
-        MyMsgBox(OOoRTC.SetCoding('エラー','utf-8'),OOoRTC.SetCoding('ネーミングサービスへの接続に失敗しました','utf-8'))
-        return None
-    return namingserver
-
-##
-# @brief ツリーで選択したアイテムがポートかどうか判定する関数
-# @param objectTree ダイアログのツリー
-# @param _path ポートのパスのリスト
-# @return [データポートまでのPath、選択中のツリーノード]
-def JudgePort(objectTree, _paths):
-    m_list = []
-        
-    node = objectTree.getSelection()
-    if node:
-        parent = node.getParent()
-        if parent:
-            m_list.insert(0, node.getDisplayValue())
-        else:
-            return None
-        if node.getChildCount() != 0:
-            return None
-    else:
-        return None
-            
-    while(True):
-        if node:
-            node = node.getParent()
-            if node:
-                m_list.insert(0, node.getDisplayValue())
-            else:
-                break
-        
-
-    flag = False
-    for t_comp in _paths:
-        if t_comp[0] == m_list:
-            return t_comp, node
-            
-            flag = True
-            
-                
-    if flag == False:
-        return None
 
 
 
-
-
-
-##
-# @brief 各RTCのパスを取得する関数
-# @param context ネーミングコンテキスト
-# @param rtclist データポートのリスト
-# @param name 現在のパス名
-# @param oParent ツリーの現在のオブジェクト
-# @param oTreeDataModel ツリーオブジェクト
-#
-def ListRecursive(context, rtclist, name, oParent, oTreeDataModel):
-    
-    m_blLength = 100
-    
-    bl = context.list(m_blLength)
-    
-
-    cont = True
-    while cont:
-        for i in bl[0]:
-            if i.binding_type == CosNaming.ncontext:
-                
-                next_context = context.resolve(i.binding_name)
-                name_buff = name[:]
-                name.append(i.binding_name[0].id)
-
-                if oTreeDataModel == None:
-                    oChild = None
-                else:
-                    oChild = oTreeDataModel.createNode(i.binding_name[0].id,False)
-                    oParent.appendChild(oChild)
-                
-                
-                
-                ListRecursive(next_context,rtclist,name, oChild, oTreeDataModel)
-                
-
-                name = name_buff
-            elif i.binding_type == CosNaming.nobject:
-                if oTreeDataModel == None:
-                    oChild = None
-                else:
-                    oChild = oTreeDataModel.createNode(i.binding_name[0].id,False)
-                    oParent.appendChild(oChild)
-                
-                if len(rtclist) > m_blLength:
-                    break
-                if i.binding_name[0].kind == 'rtc':
-                    name_buff = name[:]
-                    name_buff.append(i.binding_name[0].id)
-                    
-                    tkm = OpenRTM_aist.CorbaConsumer()
-                    tkm.setObject(context.resolve(i.binding_name))
-                    inobj = tkm.getObject()._narrow(RTC.RTObject)
-
-                    try:
-                        pin = inobj.get_ports()
-                        for p in pin:
-                            name_buff2 = name_buff[:]
-                            profile = p.get_port_profile()
-                            props = nvlist_to_dict(profile.properties)
-                            tp_n = profile.name.split('.')[1]
-                            name_buff2.append(tp_n)
-                            if oTreeDataModel == None:
-                                pass
-                            else:
-                                oChild_port = oTreeDataModel.createNode(tp_n,False)
-                                oChild.appendChild(oChild_port)
-
-                            rtclist.append([name_buff2,p])
-                    except:
-                        pass
-                        
-            else:
-                pass
-        if CORBA.is_nil(bl[1]):
-            cont = False
-        else:
-            bl = i.next_n(m_blLength)
-
-
-
-##
-# @brief
-# @param naming ネーミングコンテキスト
-# @param rtclist データポートのリスト
-# @param name 現在のパス名
-# @param oParent ツリーの現在のオブジェクト
-# @param oTreeDataModel ツリーオブジェクト
-def rtc_get_rtclist(naming, rtclist, name, oParent, oTreeDataModel):  
-    name_cxt = naming.getRootContext()
-    ListRecursive(name_cxt,rtclist,name, oParent, oTreeDataModel)
-    
-    return 0
-
-
-
-
-
-
-
-                       
-##
-# @brief ポートのパスのリストを取得する関数
-# @param name ネームサーバーの名前
-# @return ポートのパスのリスト
-#
-def getPathList(name):
-    if OOoRTC.mgr != None:
-        orb = OOoRTC.mgr._orb
-        namingserver = SetNamingServer(str(name), orb)
-        if namingserver:
-            _path = ['/', name]
-            _paths = []
-            rtc_get_rtclist(namingserver, _paths, _path, None, None)
-            return _paths
-    return None
 
 ##
 # @brief ダイアログのツリーにネーミングサーバーのオブジェクトを登録する関数
@@ -3542,8 +1163,8 @@ def getPathList(name):
 # @param dlg_control ダイアログオブジェクト
 
 def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
-    oTree = dlg_control.getControl( m_ControlName.RTCTreeName )
-    tfns_control = dlg_control.getControl( m_ControlName.NameServerFName )
+    oTree = dlg_control.getControl( ControlName.RTCTreeName )
+    tfns_control = dlg_control.getControl( ControlName.NameServerFName )
     if OOoRTC.mgr != None:
         
 
@@ -3552,7 +1173,7 @@ def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
 
         
        
-        namingserver = SetNamingServer(str(tfns_control.Text), orb)
+        namingserver = OOoRTC.SetNamingServer(str(tfns_control.Text), orb, MyMsgBox)
         
         
          
@@ -3568,43 +1189,43 @@ def SetRTCTree(oTreeModel, smgr, ctx, dlg_control):
             
             _path = ['/', str(tfns_control.Text)]
             _paths = []
-            rtc_get_rtclist(namingserver, _paths, _path, oChild, oTreeDataModel)
+            OOoRTC.rtc_get_rtclist(namingserver, _paths, _path, oChild, oTreeDataModel)
 
             
                       
             
             oTreeModel.DataModel = oTreeDataModel
 
-            tf1_control = dlg_control.getControl( m_ControlName.TextFName )
-            tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
+            tf1_control = dlg_control.getControl( ControlName.TextFName )
+            tfrow_control = dlg_control.getControl( ControlName.RowFName )
             
 
             btn1_listener = CreatePortListener( dlg_control, _paths)
-            cmdbtn1_control = dlg_control.getControl(m_ControlName.CreateBName)
+            cmdbtn1_control = dlg_control.getControl(ControlName.CreateBName)
             cmdbtn1_control.addActionListener(btn1_listener)
 
             delete_listener = DeleteListener(dlg_control, _paths)
-            delete_control = dlg_control.getControl(m_ControlName.DeleteBName)
+            delete_control = dlg_control.getControl(ControlName.DeleteBName)
             delete_control.addActionListener(delete_listener)
 
             setCol_listener = SetColListener(dlg_control, _paths)
-            setcol_control = dlg_control.getControl(m_ControlName.SetColBName)
+            setcol_control = dlg_control.getControl(ControlName.SetColBName)
             setcol_control.addActionListener(setCol_listener)
 
             attatch_listener = AttachListener( dlg_control, _paths)
-            attatch_control = dlg_control.getControl(m_ControlName.AttachBName)
+            attatch_control = dlg_control.getControl(ControlName.AttachBName)
             attatch_control.addActionListener(attatch_listener)
 
 
             detatch_listener = DetachListener( dlg_control, _paths)
-            detatch_control = dlg_control.getControl(m_ControlName.DetachBName)
+            detatch_control = dlg_control.getControl(ControlName.DetachBName)
             detatch_control.addActionListener(detatch_listener)
 
             
             
             
 
-            oTree.addSelectionChangeListener(MySelectListener(dlg_control, _paths))
+            oTree.addSelectionChangeListener(TreeSelectListener(dlg_control, _paths))
 
 
 
@@ -3647,19 +1268,22 @@ def LoadSheet():
     if OOoRTC.calc_comp:
         calc = OOoRTC.calc_comp.calc
         
-        OOoRTC.calc_comp.m_removeAllPort()
+        OOoRTC.calc_comp.mRemoveAllPort()
         sheetname = OOoRTC.SetCoding('保存用','utf-8')
         if calc.sheets.hasByName(sheetname):
+            
             sheet = calc.sheets.getByName(sheetname)
             count = 1
             m_hostname = ''
             _path = []
             while True:
+                
                 CN = 'A' + str(count)
                 try:
                     cell = sheet.getCellRangeByName(CN)
                     if cell.String == '':
                         return
+                    
                     m_name = re.split(':',cell.String)
                     if len(m_name) < 2:
                         return
@@ -3667,10 +1291,15 @@ def LoadSheet():
                     if m_hostname == m_name[1]:
                         pass
                     else:
-                        _paths = getPathList(m_name[1])
+                        
+                        _paths = OOoRTC.GetPathList(m_name[1], OOoRTC.mgr, None)
+                        
                         m_hostname = m_name[1]
+
+                    
                     if _paths == None:
                         return
+                    
                     for p in _paths:
                         if p[0] == m_name:
                             F_Name = p[0][-2] + p[0][-1]
@@ -3723,9 +1352,9 @@ def LoadSheet():
                                 
                             
                             if props['port.port_type'] == 'DataInPort':
-                                OOoRTC.calc_comp.m_addOutPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
+                                OOoRTC.calc_comp.mAddOutPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
                             elif props['port.port_type'] == 'DataOutPort':
-                                OOoRTC.calc_comp.m_addInPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
+                                OOoRTC.calc_comp.mAddInPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
                 except:
                     pass
                 count = count + 1
@@ -3786,9 +1415,9 @@ def UpdateSaveSheet():
                 
             count = 1
             PortList = []
-            for n,o in OOoRTC.calc_comp._OutPorts.items():
+            for n,o in OOoRTC.calc_comp.OutPorts.items():
                 PortList.append(o)
-            for n,i in OOoRTC.calc_comp._InPorts.items():
+            for n,i in OOoRTC.calc_comp.InPorts.items():
                 PortList.append(i)
 
             for p in PortList:
@@ -3853,23 +1482,23 @@ def UpdateSaveSheet():
 
 def UpdateTree(dlg_control, m_port):
     
-    scb_control = dlg_control.getControl( m_ControlName.SheetCBName )
+    scb_control = dlg_control.getControl( ControlName.SheetCBName )
     scb_control.setText(m_port._sn)
     
-    tfrow_control = dlg_control.getControl( m_ControlName.RowFName )
+    tfrow_control = dlg_control.getControl( ControlName.RowFName )
     tfrow_control.setText(m_port._row)
 
-    mlen_control = dlg_control.getControl( m_ControlName.LenTName )
+    mlen_control = dlg_control.getControl( ControlName.LenTName )
     mlen_control.setText(m_port._length)
     
 
-    ffcol_control = dlg_control.getControl( m_ControlName.InfoTName )
+    ffcol_control = dlg_control.getControl( ControlName.InfoTName )
     ffcol_control.setText(u'作成済み')
 
-    cfcol_control = dlg_control.getControl( m_ControlName.ColTName )
+    cfcol_control = dlg_control.getControl( ControlName.ColTName )
     cfcol_control.setText(str(m_port._col))
 
-    cfcol_control = dlg_control.getControl( m_ControlName.LCBName )
+    cfcol_control = dlg_control.getControl( ControlName.LCBName )
     cfcol_control.enableTriState( True )
     if m_port.state:
         cfcol_control.setState(1)
@@ -3885,15 +1514,15 @@ def UpdateTree(dlg_control, m_port):
 
 def UpdateDataPortList(dlg_control):
     if OOoRTC.calc_comp:
-        dpcb_control = dlg_control.getControl( m_ControlName.PortCBName )
+        dpcb_control = dlg_control.getControl( ControlName.PortCBName )
 
         dpcb_control.removeItems(0,dpcb_control.ItemCount)
         dpcb_control.Text = ""
         
-        for n,i in OOoRTC.calc_comp._InPorts.items():
+        for n,i in OOoRTC.calc_comp.InPorts.items():
             dpcb_control.addItem (i._name, dpcb_control.ItemCount)
 
-        for n,i in OOoRTC.calc_comp._OutPorts.items():
+        for n,i in OOoRTC.calc_comp.OutPorts.items():
             dpcb_control.addItem (i._name, dpcb_control.ItemCount)
 
             
@@ -3903,11 +1532,11 @@ def UpdateDataPortList(dlg_control):
 def UpdateInPortList(dlg_control):
     
     if OOoRTC.calc_comp:
-        ipcb_control = dlg_control.getControl( m_ControlName.InPortCBName )
+        ipcb_control = dlg_control.getControl( ControlName.InPortCBName )
         ipcb_control.removeItems(0,ipcb_control.ItemCount)
         ipcb_control.Text = ""
         
-        for n,i in OOoRTC.calc_comp._InPorts.items():
+        for n,i in OOoRTC.calc_comp.InPorts.items():
             
             
             ipcb_control.addItem (i._name, ipcb_control.ItemCount)
@@ -3924,7 +1553,7 @@ def UpdateInPortList(dlg_control):
 # @param m_port データポートオブジェクト
 def UpdateAttachPort(dlg_control, m_port):
     
-    ipcb_control = dlg_control.getControl( m_ControlName.AttachCBName )
+    ipcb_control = dlg_control.getControl( ControlName.AttachCBName )
     ipcb_control.removeItems(0,ipcb_control.ItemCount)
     ipcb_control.Text = ""
     
@@ -3939,10 +1568,10 @@ def UpdateAttachPort(dlg_control, m_port):
 # @param dlg_control ダイアログオブジェクト
 def ClearInfo(dlg_control):
     
-    ffcol_control = dlg_control.getControl( m_ControlName.InfoTName )
+    ffcol_control = dlg_control.getControl( ControlName.InfoTName )
     ffcol_control.setText(u'未作成')
 
-    cfcol_control = dlg_control.getControl( m_ControlName.ColTName )
+    cfcol_control = dlg_control.getControl( ControlName.ColTName )
     cfcol_control.setText("2")
 
     UpdateInPortList(dlg_control)
@@ -3969,13 +1598,13 @@ class PortListListener(unohelper.Base, XTextListener):
     def textChanged(self, actionEvent):
         UpdateInPortList(self.dlg_control)
         if OOoRTC.calc_comp:
-            ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
+            ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
             
             
-            if OOoRTC.calc_comp._InPorts.has_key(str(ptlist_control.Text)) == True:
-                UpdateTree(self.dlg_control, OOoRTC.calc_comp._InPorts[str(ptlist_control.Text)])
-            elif OOoRTC.calc_comp._OutPorts.has_key(str(ptlist_control.Text)) == True:
-                UpdateTree(self.dlg_control, OOoRTC.calc_comp._OutPorts[str(ptlist_control.Text)])
+            if OOoRTC.calc_comp.InPorts.has_key(str(ptlist_control.Text)) == True:
+                UpdateTree(self.dlg_control, OOoRTC.calc_comp.InPorts[str(ptlist_control.Text)])
+            elif OOoRTC.calc_comp.OutPorts.has_key(str(ptlist_control.Text)) == True:
+                UpdateTree(self.dlg_control, OOoRTC.calc_comp.OutPorts[str(ptlist_control.Text)])
         
 
 ##
@@ -3984,13 +1613,13 @@ class PortListListener(unohelper.Base, XTextListener):
 # @param m_port データポートオブジェクト
 def AttachTC(dlg_control, m_port):
     
-    tfcol_control = dlg_control.getControl( m_ControlName.InPortCBName )
+    tfcol_control = dlg_control.getControl( ControlName.InPortCBName )
     iname = str(tfcol_control.Text)
     
-    if OOoRTC.calc_comp._InPorts.has_key(iname) == True:
+    if OOoRTC.calc_comp.InPorts.has_key(iname) == True:
                         
         m_port.attachports[iname] = iname
-        OOoRTC.calc_comp._InPorts[iname].attachports[m_port._name] = m_port._name
+        OOoRTC.calc_comp.InPorts[iname].attachports[m_port._name] = m_port._name
 
         UpdateSaveSheet()
         UpdateAttachPort(dlg_control, m_port)
@@ -4027,21 +1656,21 @@ class AttachListener( unohelper.Base, XActionListener):
 
         if OOoRTC.calc_comp:
             
-            ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
+            ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
             
             
             
-            if OOoRTC.calc_comp._OutPorts.has_key(str(ptlist_control.Text)) == True:
-                o = OOoRTC.calc_comp._OutPorts[str(ptlist_control.Text)]
+            if OOoRTC.calc_comp.OutPorts.has_key(str(ptlist_control.Text)) == True:
+                o = OOoRTC.calc_comp.OutPorts[str(ptlist_control.Text)]
                 AttachTC(self.dlg_control, o)
                 return
 
-        objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
-        t_comp, nd = JudgePort(objectTree, self._paths)
+        objectTree = self.dlg_control.getControl( ControlName.RTCTreeName )
+        t_comp, nd = OOoRTC.JudgePort(objectTree, self._paths)
             
         if t_comp:
             
-            for n,o in OOoRTC.calc_comp._OutPorts.items():
+            for n,o in OOoRTC.calc_comp.OutPorts.items():
                 
                 if o._port_a[0] == t_comp[0]:
                     
@@ -4064,13 +1693,13 @@ class AttachListener( unohelper.Base, XActionListener):
 # @param m_port データポートオブジェクト
 
 def DetachTC(dlg_control, m_port):
-    tfcol_control = dlg_control.getControl( m_ControlName.AttachCBName )
+    tfcol_control = dlg_control.getControl( ControlName.AttachCBName )
     iname = str(tfcol_control.Text)
                     
     if m_port.attachports.has_key(iname) == True:
         del m_port.attachports[iname]
-        if OOoRTC.calc_comp._InPorts[iname].attachports.has_key(m_port._name) == True:
-            del OOoRTC.calc_comp._InPorts[iname].attachports[m_port._name]
+        if OOoRTC.calc_comp.InPorts[iname].attachports.has_key(m_port._name) == True:
+            del OOoRTC.calc_comp.InPorts[iname].attachports[m_port._name]
             UpdateSaveSheet()  
             UpdateAttachPort(dlg_control, m_port)
 
@@ -4104,20 +1733,20 @@ class DetachListener( unohelper.Base, XActionListener):
 
         if OOoRTC.calc_comp:
             
-            ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
+            ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
             
             
             
-            if OOoRTC.calc_comp._OutPorts.has_key(str(ptlist_control.Text)) == True:
-                o = OOoRTC.calc_comp._OutPorts[str(ptlist_control.Text)]
+            if OOoRTC.calc_comp.OutPorts.has_key(str(ptlist_control.Text)) == True:
+                o = OOoRTC.calc_comp.OutPorts[str(ptlist_control.Text)]
                 DetachTC(self.dlg_control, o)
                 return
             
-        objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
-        t_comp, nd = JudgePort(objectTree, self._paths)
+        objectTree = self.dlg_control.getControl( ControlName.RTCTreeName )
+        t_comp, nd = OOoRTC.JudgePort(objectTree, self._paths)
         if t_comp:
             
-            for n,o in OOoRTC.calc_comp._OutPorts.items():
+            for n,o in OOoRTC.calc_comp.OutPorts.items():
                 if o._port_a[0] == t_comp[0]:
                     DetachTC(self.dlg_control, o)
                     
@@ -4135,11 +1764,11 @@ class DetachListener( unohelper.Base, XActionListener):
 # @param dlg_control ダイアログオブジェクト
 
 def SetPortParam(m_port, dlg_control):
-    objectControlRow = dlg_control.getControl( m_ControlName.RowFName )
-    cfcol_control = dlg_control.getControl( m_ControlName.ColTName )
-    cb_control = dlg_control.getControl( m_ControlName.LCBName )
-    mlen_control = dlg_control.getControl( m_ControlName.LenTName )
-    Stf = dlg_control.getControl( m_ControlName.SheetCBName )
+    objectControlRow = dlg_control.getControl( ControlName.RowFName )
+    cfcol_control = dlg_control.getControl( ControlName.ColTName )
+    cb_control = dlg_control.getControl( ControlName.LCBName )
+    mlen_control = dlg_control.getControl( ControlName.LenTName )
+    Stf = dlg_control.getControl( ControlName.SheetCBName )
 
     m_port._row = str(objectControlRow.Text)
     m_port._sn = str(Stf.Text)
@@ -4174,35 +1803,35 @@ class CreatePortListener( unohelper.Base, XActionListener):
     # @param self 
     # @param actionEvent 
     def actionPerformed(self, actionEvent):
-        objectControl = self.dlg_control.getControl( m_ControlName.TextFName )
+        objectControl = self.dlg_control.getControl( ControlName.TextFName )
         
-        objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
+        objectTree = self.dlg_control.getControl( ControlName.RTCTreeName )
         
         
-        ffcol_control = self.dlg_control.getControl( m_ControlName.InfoTName )
+        ffcol_control = self.dlg_control.getControl( ControlName.InfoTName )
                 
         if OOoRTC.calc_comp:
-            ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
+            ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
             
             
             
-            if OOoRTC.calc_comp._InPorts.has_key(str(ptlist_control.Text)) == True:
-                SetPortParam(OOoRTC.calc_comp._InPorts[str(ptlist_control.Text)], self.dlg_control)
+            if OOoRTC.calc_comp.InPorts.has_key(str(ptlist_control.Text)) == True:
+                SetPortParam(OOoRTC.calc_comp.InPorts[str(ptlist_control.Text)], self.dlg_control)
                 return
-            elif OOoRTC.calc_comp._OutPorts.has_key(str(ptlist_control.Text)) == True:
-                SetPortParam(OOoRTC.calc_comp._OutPorts[str(ptlist_control.Text)], self.dlg_control)
+            elif OOoRTC.calc_comp.OutPorts.has_key(str(ptlist_control.Text)) == True:
+                SetPortParam(OOoRTC.calc_comp.OutPorts[str(ptlist_control.Text)], self.dlg_control)
                 return
 
         
-        t_comp, nd = JudgePort(objectTree, self._paths)
+        t_comp, nd = OOoRTC.JudgePort(objectTree, self._paths)
         if t_comp:
             
-            for n,o in OOoRTC.calc_comp._OutPorts.items():
+            for n,o in OOoRTC.calc_comp.OutPorts.items():
                 if o._port_a[0] == t_comp[0]:
                     SetPortParam(o, self.dlg_control)
                     
                     return
-            for n,i in OOoRTC.calc_comp._InPorts.items():
+            for n,i in OOoRTC.calc_comp.InPorts.items():
                 if i._port_a[0] == t_comp[0]:
                     SetPortParam(i, self.dlg_control)
                     
@@ -4232,7 +1861,7 @@ class CreatePortListener( unohelper.Base, XActionListener):
             UpdateInPortList(self.dlg_control)
             UpdateDataPortList(self.dlg_control)
 
-            #cfcol_control = self.dlg_control.getControl( m_ControlName.ColTName )
+            #cfcol_control = self.dlg_control.getControl( ControlName.ColTName )
             #cfcol_control.setText(str(2))
         else:
             MyMsgBox(OOoRTC.SetCoding('エラー','utf-8'),OOoRTC.SetCoding('データポートではありません','utf-8'))
@@ -4268,11 +1897,11 @@ class SetRTCTreeListener( unohelper.Base, XActionListener ):
 
 
 ##
-# @class MySelectListener
+# @class TreeSelectListener
 # @brief ツリーのマウスでの操作に対するコールバック
 #
 
-class MySelectListener( unohelper.Base, XSelectionChangeListener):
+class TreeSelectListener( unohelper.Base, XSelectionChangeListener):
     ##
     # @brief コンストラクタ
     # @param self 
@@ -4288,26 +1917,26 @@ class MySelectListener( unohelper.Base, XSelectionChangeListener):
     # @param ev 
     def selectionChanged(self, ev):
         
-        objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
-        t_comp, nd = JudgePort(objectTree, self._paths)
+        objectTree = self.dlg_control.getControl( ControlName.RTCTreeName )
+        t_comp, nd = OOoRTC.JudgePort(objectTree, self._paths)
 
         
-        ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
+        ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
         ptlist_control.Text = "" 
             
         if t_comp:
-            for n,o in OOoRTC.calc_comp._OutPorts.items():
+            for n,o in OOoRTC.calc_comp.OutPorts.items():
                 if o._port_a[0] == t_comp[0]:
                     UpdateTree(self.dlg_control, o)
                     return
-            for n,i in OOoRTC.calc_comp._InPorts.items():
+            for n,i in OOoRTC.calc_comp.InPorts.items():
                 if i._port_a[0] == t_comp[0]:
                     UpdateTree(self.dlg_control, i)
                     return
         else:
             return
 
-        ffcol_control = self.dlg_control.getControl( m_ControlName.InfoTName )
+        ffcol_control = self.dlg_control.getControl( ControlName.InfoTName )
         ffcol_control.setText(u'未作成')
 
 
@@ -4320,7 +1949,7 @@ def DelPortTC(m_port, dlg_control):
     MyMsgBox('',OOoRTC.SetCoding('削除しました','utf-8'))
     UpdateSaveSheet()
 
-    ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
+    ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
     ptlist_control.Text = ""
 
 ##
@@ -4343,37 +1972,37 @@ class DeleteListener( unohelper.Base, XActionListener ):
     # @param self
     # @param actionEvent 
     def actionPerformed(self, actionEvent):
-        objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
+        objectTree = self.dlg_control.getControl( ControlName.RTCTreeName )
         
 
         if OOoRTC.calc_comp:
-            ptlist_control = self.dlg_control.getControl( m_ControlName.PortCBName )
+            ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
             
             
-            if OOoRTC.calc_comp._InPorts.has_key(str(ptlist_control.Text)) == True:
+            if OOoRTC.calc_comp.InPorts.has_key(str(ptlist_control.Text)) == True:
                 
-                i = OOoRTC.calc_comp._InPorts[str(ptlist_control.Text)]
+                i = OOoRTC.calc_comp.InPorts[str(ptlist_control.Text)]
                 
-                OOoRTC.calc_comp.m_removeInPort(i)
+                OOoRTC.calc_comp.mRemoveInPort(i)
                 DelPortTC(i, self.dlg_control)
                 return
-            elif OOoRTC.calc_comp._OutPorts.has_key(str(ptlist_control.Text)) == True:
-                o = OOoRTC.calc_comp._OutPorts[str(ptlist_control.Text)]
-                OOoRTC.calc_comp.m_removeOutPort(o)
+            elif OOoRTC.calc_comp.OutPorts.has_key(str(ptlist_control.Text)) == True:
+                o = OOoRTC.calc_comp.OutPorts[str(ptlist_control.Text)]
+                OOoRTC.calc_comp.mRemoveOutPort(o)
                 DelPortTC(o, self.dlg_control)
                 return
 
-        t_comp, nd = JudgePort(objectTree, self._paths)
+        t_comp, nd = OOoRTC.JudgePort(objectTree, self._paths)
         
         if t_comp:
-            for n,o in OOoRTC.calc_comp._OutPorts.items():
+            for n,o in OOoRTC.calc_comp.OutPorts.items():
                 if o._port_a[0] == t_comp[0]:
-                    OOoRTC.calc_comp.m_removeOutPort(o)
+                    OOoRTC.calc_comp.mRemoveOutPort(o)
                     DelPortTC(o, self.dlg_control)
                     return
-            for n,i in OOoRTC.calc_comp._InPorts.items():
+            for n,i in OOoRTC.calc_comp.InPorts.items():
                 if i._port_a[0] == t_comp[0]:
-                    OOoRTC.calc_comp.m_removeInPort(i)
+                    OOoRTC.calc_comp.mRemoveInPort(i)
                     DelPortTC(i, self.dlg_control)
                     return
            
@@ -4404,19 +2033,19 @@ class SetColListener( unohelper.Base, XActionListener ):
     # @param self
     # @param actionEvent
     def actionPerformed(self, actionEvent):
-        objectTree = self.dlg_control.getControl( m_ControlName.RTCTreeName )
-        t_comp, nd = JudgePort(objectTree, self._paths)
+        objectTree = self.dlg_control.getControl( ControlName.RTCTreeName )
+        t_comp, nd = OOoRTC.JudgePort(objectTree, self._paths)
         if t_comp:
-            for n,o in OOoRTC.calc_comp._OutPorts.items():
+            for n,o in OOoRTC.calc_comp.OutPorts.items():
                 if o._port_a[0] == t_comp[0]:
                     o._num = int(o._col)
-                    #tfcol_control = self.dlg_control.getControl( m_ControlName.ColTName )
+                    #tfcol_control = self.dlg_control.getControl( ControlName.ColTName )
                     #tfcol_control.setText(str(2))
                     return
-            for n,i in OOoRTC.calc_comp._InPorts.items():
+            for n,i in OOoRTC.calc_comp.InPorts.items():
                 if i._port_a[0] == t_comp[0]:
                     i._num = int(i._col)
-                    #tfcol_control = self.dlg_control.getControl( m_ControlName.ColTName )
+                    #tfcol_control = self.dlg_control.getControl( ControlName.ColTName )
                     #tfcol_control.setText(str(2))
                     return
         else:
@@ -4443,11 +2072,11 @@ class SetAllColListener( unohelper.Base, XActionListener ):
     # @param self
     # @param actionEvent
     def actionPerformed(self, actionEvent):
-        #tfcol_control = self.dlg_control.getControl( m_ControlName.ColTName )
+        #tfcol_control = self.dlg_control.getControl( ControlName.ColTName )
         #tfcol_control.setText(str(2))
-        for n,o in OOoRTC.calc_comp._OutPorts.items():
+        for n,o in OOoRTC.calc_comp.OutPorts.items():
             o._num = int(o._col)
-        for n,i in OOoRTC.calc_comp._InPorts.items():
+        for n,i in OOoRTC.calc_comp.InPorts.items():
             i._num = int(i._col)
             
         
@@ -4463,7 +2092,7 @@ def SetDialog():
     dp = smgr.createInstance("com.sun.star.awt.DialogProvider")
     dlg_control = dp.createDialog("vnd.sun.star.script:"+dialog_name+"?location=application")
 
-    oTree = dlg_control.getControl(m_ControlName.RTCTreeName)
+    oTree = dlg_control.getControl(ControlName.RTCTreeName)
     
 
     
@@ -4478,24 +2107,24 @@ def SetDialog():
     
     
     SetRTCTree_listener = SetRTCTreeListener( oTreeModel, smgr, ctx, dlg_control )
-    setrtctree_control = dlg_control.getControl(m_ControlName.CreateTreeBName)
+    setrtctree_control = dlg_control.getControl(ControlName.CreateTreeBName)
     setrtctree_control.addActionListener(SetRTCTree_listener)
 
     setallcol_listener = SetAllColListener( dlg_control )
-    setallcol_control = dlg_control.getControl(m_ControlName.SetAllLineBName)
+    setallcol_control = dlg_control.getControl(ControlName.SetAllLineBName)
     setallcol_control.addActionListener(setallcol_listener)
         
 
-    tfns_control = dlg_control.getControl( m_ControlName.NameServerFName )
+    tfns_control = dlg_control.getControl( ControlName.NameServerFName )
     tfns_control.setText('localhost')
 
-    tccol_control = dlg_control.getControl( m_ControlName.ColTName )
+    tccol_control = dlg_control.getControl( ControlName.ColTName )
     tccol_control.setText('2')
 
-    tfcol_control = dlg_control.getControl( m_ControlName.RowFName )
+    tfcol_control = dlg_control.getControl( ControlName.RowFName )
     tfcol_control.setText('A')
 
-    st_control = dlg_control.getControl( m_ControlName.SheetCBName )
+    st_control = dlg_control.getControl( ControlName.SheetCBName )
     
     try:
       calc = OOoCalc()
@@ -4511,14 +2140,14 @@ def SetDialog():
     st_control.Text = names[0]
 
     
-    lcb_control = dlg_control.getControl( m_ControlName.LCBName )
+    lcb_control = dlg_control.getControl( ControlName.LCBName )
     lcb_control.enableTriState( True )
     lcb_control.setState(1)
 
 
 
     dportl_listener = PortListListener( dlg_control )
-    dportl_control = dlg_control.getControl( m_ControlName.PortCBName )
+    dportl_control = dlg_control.getControl( ControlName.PortCBName )
     dportl_control.addTextListener(dportl_listener)
     
     
