@@ -1390,7 +1390,7 @@ class CalcOutPortSeq(CalcPortObject):
     # @param self 
     # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
-        cell, sheet = self.GetCell(m_cal)
+        cell, sheet = self.getCell(m_cal)
 
         if cell != None:
             val = self.putOut(cell, sheet, m_cal)
@@ -1468,7 +1468,7 @@ class CalcOutPortEx(CalcPortObject):
 
         
 
-        cell, sheet = self.GetCell(m_cal)
+        cell, sheet = self.getCell(m_cal)
         
 
         if cell != None:
