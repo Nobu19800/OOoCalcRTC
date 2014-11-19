@@ -327,23 +327,7 @@ class CalcPortObject:
     # @param self 
     # @param m_cal OOoCalcRTC
     def update_cellName(self, m_cal):
-        if m_cal.calc.sheets.hasByName(self._sn):
-            sheet = m_cal.calc.sheets.getByName(self._sn)
-            if self._length == "":
-                CN = self._row + str(self._col)
-            else:
-                CN = self._row + str(self._col) + ':' + self._length + str(self._col)
-            try:
-                cell = sheet.getCellRangeByName(CN)
-                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-                m_len = m_len + 1
-
-                self.update_cellNameSub(cell, m_len)
-
-                
-                            
-            except:
-                return
+        pass
 
     ##
     # @brief 
@@ -359,7 +343,7 @@ class CalcPortObject:
     # @param cell セルオブジェクト
     # @param m_len 行の範囲
     def update_cellNameSingle(self, cell, m_len):
-        cell.getCellByPosition(0, 0).String = self._name
+        pass
 
     ##
     # @brief 
@@ -367,8 +351,7 @@ class CalcPortObject:
     # @param cell セルオブジェクト
     # @param m_len 行の範囲
     def update_cellNameSeq(self, cell, m_len):
-        for j in range(0, m_len):
-            cell.getCellByPosition(j, 0).String = self._name + ":" + str(j)
+        pass
 
     ##
     # @brief 
@@ -685,14 +668,7 @@ class CalcPortObject:
     # @param cell セルオブジェクト
     # @return 
     def input_cellNameEx(self, b, count, m_len, cell):
-        
-        cell.getCellByPosition(count[0], 0).String = b
-        
-                    
-        count[0] += 1
-        if count[0] >= m_len:
-            return False
-        return True
+        pass
             
 
     ##
@@ -707,28 +683,14 @@ class CalcPortObject:
     # @param self 
     # @param m_cal OOoCalcRTC
     def getCell(self, m_cal):
-        if m_cal.calc.sheets.hasByName(self._sn):
-            sheet = m_cal.calc.sheets.getByName(self._sn)
-
-            if self._length == "":
-                CN = self._row + str(self._num)
-            else:
-                CN = self._row + str(self._num) + ':' + self._length + str(self._num)
-            try:
-                cell = sheet.getCellRangeByName(CN)
-            except:
-                pass
-            
-            return cell, sheet
-        else:
-            return None
+        pass
 
     ##
     # @brief 
     # @param self 
     # @param cell セルオブジェクト
     # @param b データ
-    def updateIn(self, cell, b):
+    def updateIn(self, b, m_cal):
         pass
 
     ##
@@ -749,20 +711,18 @@ class CalcPortObject:
                 self.buffdata = [data.data]
 
         guard = OpenRTM_aist.ScopedLock(self._mutex)
-        tmbd = self.buffdata[:]
-        self.buffdata = []
+        try:
+            tmbd = self.buffdata[:]
+            self.buffdata = []
+        except:
+            pass
         del guard
     
         tms = len(tmbd)-1
         if self.state:
             tms = 0
         for b in tmbd:
-            sheetname = self._sn
-            
-            cell, sheet = self.getCell(m_cal)
-
-            if cell != None:
-                self.updateIn(cell, b)
+            self.updateIn(b, m_cal)
 
         
                     
@@ -773,45 +733,7 @@ class CalcPortObject:
     # @param sheet シートオブジェクト
     # @param m_cal OOoCalcRTC
     def putOut(self, cell, sheet, m_cal):
-        m_string = DataType.String
-        m_value = DataType.Value
-
-        cell.CellBackColor = OOoRTC.RGB(int(m_cal.red[0]), int(m_cal.green[0]), int(m_cal.blue[0]))
-        
-        if self._dataType[2] == m_string:
-            if  self._length == "":
-                val = cell.String
-            else:
-                val = []
-                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-                for i in range(0, m_len+1):
-                    val.append(cell.getCellByPosition(i, 0).String)
-        elif self._dataType[2] == m_value:
-            if self._length == "":
-                val = cell.Value
-            else:
-                val = []
-                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-                for i in range(0, m_len+1):
-                    val.append(cell.getCellByPosition(i, 0).Value)
-                    
-        
-                
-        if self._num > 1 and self.state == True:
-            t_n = self._num -1
-            if self._length == "":
-                CN2 = self._row + str(t_n)
-            else:
-                CN2 = self._row + str(t_n) + ':' + self._length + str(t_n)
-
-            try:
-                cell2 = sheet.getCellRangeByName(CN2)
-                cell2.CellBackColor = OOoRTC.RGB(255, 255, 255)
-            except:
-                pass
-
-
-        return val
+        pass
 
 ##
 # @class CalcInPort
@@ -848,18 +770,8 @@ class CalcInPort(CalcPortObject):
     # @param self 
     # @param cell セルオブジェクト
     # @param b データ
-    def updateIn(self, cell, b):
-        m_string = DataType.String
-        m_value = DataType.Value
-        
-        m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-        m_len = m_len + 1
-        if self._dataType[2] == m_string:
-            cell.getCellByPosition(0, 0).String = b
-        elif self._dataType[2] == m_value:
-            cell.getCellByPosition(0, 0).Value = b
-        if self.state:
-            self._num = self._num + 1
+    def updateIn(self, b, m_cal):
+        pass
 
     ##
     # @brief 
@@ -904,22 +816,8 @@ class CalcInPortSeq(CalcPortObject):
     # @param self 
     # @param cell セルオブジェクト
     # @param b データ
-    def updateIn(self, cell, b):
-        m_string = DataType.String
-        m_value = DataType.Value
-        
-        m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-        m_len = m_len + 1
-
-        for j in range(0, len(b)):
-            if m_len > j:
-                if self._dataType[2] == m_string:
-                    cell.getCellByPosition(j, 0).String = b[j]
-                elif self._dataType[2] == m_value:
-                    cell.getCellByPosition(j, 0).Value = b[j]
-
-        if self.state:
-            self._num = self._num + 1
+    def updateIn(self, b, m_cal):
+        pass
 
     ##
     # @brief 
@@ -970,314 +868,318 @@ class CalcInPortEx(CalcPortObject):
     # @param self 
     # @param cell セルオブジェクト
     # @param b データ
-    def updateIn(self, cell, b):
+    def updateIn(self, b, m_cal):
         m_string = DataType.String
         m_value = DataType.Value
-        m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
-        m_len = m_len + 1
 
-        count = [0]
+        cell, sheet, m_len = self.getCell(m_cal)
+        
+        
+        if cell != None:
+            
 
-        if self.state:
-            self._num = self._num + 1
+            count = [0]
 
-        if self._dataType[3] == "TimedRGBColour":
-            if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.g, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.b, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoint2D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVector2D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPose2D":
-            if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVelocity2D":
-            if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAcceleration2D":
-            if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoseVel2D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSize2D":
-            if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedGeometry2D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedCovariance2D":
-            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xt, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yt, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.tt, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPointCovariance2D":
-            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedCarlike":
-            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.steeringAngle, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSpeedHeading2D":
-            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoint3D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVector3D":
-            if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedOrientation3D":
-            if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPose3D":
-            if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.z, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedVelocity3D":
-            if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAngularVelocity3D":
-            if self.putDataEx(b.avx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.avy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.avz, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAcceleration3D":
-            if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.az, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedAngularAcceleration3D":
-            if self.putDataEx(b.aax, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.aay, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.aaz, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedPoseVel3D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSize3D":
-            if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.h, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedGeometry3D":
-            if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.size.h, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedCovariance3D":
-            if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.xa, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.yr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ya, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.zz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.za, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.rr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.rp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.ra, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.pa, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.aa, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedSpeedHeading3D":
-            if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.direction.r, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.direction.p, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.direction.y, count, m_len, cell, m_value) == False:
-                return
-        if self._dataType[3] == "TimedOAP":
-            if self.putDataEx(b.orientation.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.orientation.va, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.approach.va, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vx, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vy, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vz, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vr, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.vp, count, m_len, cell, m_value) == False:
-                return
-            if self.putDataEx(b.position.va, count, m_len, cell, m_value) == False:
-                return
+            if self.state:
+                self._num = self._num + 1
+
+            if self._dataType[3] == "TimedRGBColour":
+	        if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.g, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.b, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedPoint2D":
+	        if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedVector2D":
+	        if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedPose2D":
+	        if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedVelocity2D":
+	        if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedAcceleration2D":
+	        if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedPoseVel2D":
+	        if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedSize2D":
+	        if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedGeometry2D":
+	        if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.heading, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedCovariance2D":
+	        if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xt, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.yt, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.tt, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedPointCovariance2D":
+	        if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedCarlike":
+	        if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.steeringAngle, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedSpeedHeading2D":
+	        if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.heading, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedPoint3D":
+	        if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedVector3D":
+	        if self.putDataEx(b.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.z, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedOrientation3D":
+	        if self.putDataEx(b.r, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.p, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.y, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedPose3D":
+	        if self.putDataEx(b.position.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.z, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.r, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.p, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.y, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedVelocity3D":
+	        if self.putDataEx(b.vx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.vy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.vz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.vr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.vp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.va, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedAngularVelocity3D":
+	        if self.putDataEx(b.avx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.avy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.avz, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedAcceleration3D":
+	        if self.putDataEx(b.ax, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.ay, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.az, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedAngularAcceleration3D":
+	        if self.putDataEx(b.aax, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.aay, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.aaz, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedPoseVel3D":
+	        if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.vx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.vy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.vz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.vr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.vp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.velocities.va, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedSize3D":
+	        if self.putDataEx(b.l, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.w, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.h, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedGeometry3D":
+	        if self.putDataEx(b.pose.position.x, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.position.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.position.z, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.orientation.r, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.orientation.p, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pose.orientation.y, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.size.l, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.size.w, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.size.h, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedCovariance3D":
+	        if self.putDataEx(b.xx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.xa, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.yy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.yz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.yr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.ya, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.zz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.za, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.rr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.rp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.ra, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.pa, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.aa, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedSpeedHeading3D":
+	        if self.putDataEx(b.speed, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.direction.r, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.direction.p, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.direction.y, count, m_len, cell, m_value) == False:
+	            return
+	    if self._dataType[3] == "TimedOAP":
+	        if self.putDataEx(b.orientation.vx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.vy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.vz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.vr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.vp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.orientation.va, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.approach.vx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.approach.vy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.approach.vz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.approach.vr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.approach.vp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.approach.va, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.vx, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.vy, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.vz, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.vr, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.vp, count, m_len, cell, m_value) == False:
+	            return
+	        if self.putDataEx(b.position.va, count, m_len, cell, m_value) == False:
+	                return
         
         
         
@@ -1292,18 +1194,7 @@ class CalcInPortEx(CalcPortObject):
     # @param cell セルオブジェクト
     # @param d_type データタイプ
     def putDataEx(self, b, count, m_len, cell, d_type):
-        m_string = DataType.String
-        m_value = DataType.Value
-
-        if d_type == m_string:
-            cell.getCellByPosition(count[0], 0).String = b
-        elif d_type == m_value:
-            cell.getCellByPosition(count[0], 0).Value = b
-                    
-        count[0] += 1
-        if count[0] >= m_len:
-            return False
-        return True
+        return False
 
         
 ##
@@ -1332,12 +1223,13 @@ class CalcOutPort(CalcPortObject):
     # @param self 
     # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
-        cell, sheet = self.getCell(m_cal)
-
+        cell, sheet, m_len = self.getCell(m_cal)
+        
         if cell != None:
             val = self.putOut(cell, sheet, m_cal)
             if self._length == "":
                 if val != "":
+                    
                     self._data.data = self._dataType[0](val)
                     OpenRTM_aist.setTimestamp(self._data)
                     self._port.write()
@@ -1390,13 +1282,13 @@ class CalcOutPortSeq(CalcPortObject):
     # @param self 
     # @param m_cal OOoCalcRTC
     def putData(self, m_cal):
-        cell, sheet = self.getCell(m_cal)
+        cell, sheet, m_len = self.getCell(m_cal)
 
         if cell != None:
             val = self.putOut(cell, sheet, m_cal)
             if self._length == "":
                 if val != "":
-                    self._data.data = self._dataType[0](val)
+                    self._data.data = [self._dataType[0](val)]
                     OpenRTM_aist.setTimestamp(self._data)
                     self._port.write()
                     if self.state:
@@ -1468,11 +1360,13 @@ class CalcOutPortEx(CalcPortObject):
 
         
 
-        cell, sheet = self.getCell(m_cal)
+        cell, sheet, m_len = self.getCell(m_cal)
+        
         
 
         if cell != None:
             val = self.putOut(cell, sheet, m_cal)
+            
             
             if self._length == "":
                 val = [val]
@@ -1496,6 +1390,7 @@ class CalcOutPortEx(CalcPortObject):
                     return
             if self._dataType[3] == "TimedPoint2D":
                 ans = self.putDataEx(count, val, m_value)
+                
                 if ans != None:
                     self._data.data.x = ans
                 else:
@@ -2223,6 +2118,7 @@ class CalcOutPortEx(CalcPortObject):
         
         if count[0] < len(val):
             count[0] += 1
+            
             return val[count[0]-1]
         else:
             return None

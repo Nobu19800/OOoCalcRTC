@@ -60,6 +60,7 @@ import SpreadSheet_idl
 
 import OOoRTC
 import CalcDataPort
+from CalcControl import *
 #from SpreadSheet_idl_example import *
 from omniORB import PortableServer
 import SpreadSheet, SpreadSheet__POA
@@ -151,158 +152,476 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.__constraints__.c_move", "(0,1)",
                   ""]
 
+
+
+
+
+
+
 ##
-# @class CalcConfigUpdateParam
-# @brief コンフィギュレーションパラメータが更新されたときのコールバック
+# @class OOoCalcPortObject
+# @brief 追加するポートのクラス
 #
 
-class CalcConfigUpdateParam(OpenRTM_aist.ConfigurationSetListener):
+
+class OOoCalcPortObject(CalcDataPort.CalcPortObject):
     ##
     # @brief コンストラクタ
     # @param self 
-    # @param e_rtc OOoCalcRTC
-    #
-   def __init__(self,e_rtc):
-        self.m_rtc =  e_rtc
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        CalcDataPort.CalcPortObject.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+    
+    ##
+    # @brief 
+    # @param self 
+    # @param m_cal OOoCalcRTC
+    def update_cellName(self, m_cal):
+        cell, sheet, m_len = self.getCell2(m_cal,self._col,self._row,self._sn,self._length)
+        self.update_cellNameSub(cell, m_len)
+
+
+    
+        
+    ##
+    # @brief 
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
+    def update_cellNameSingle(self, cell, m_len):
+        cell.getCellByPosition(0, 0).String = self._name
 
     ##
     # @brief 
     # @param self 
-    # @param config_param_name 
+    # @param cell セルオブジェクト
+    # @param m_len 行の範囲
+    def update_cellNameSeq(self, cell, m_len):
+        for j in range(0, m_len):
+            cell.getCellByPosition(j, 0).String = self._name + ":" + str(j)
+
+    
+
+    ##
+    # @brief 
+    # @param self 
+    # @param b データ名
+    # @param count カウンター
+    # @param m_len 行の範囲
+    # @param cell セルオブジェクト
+    # @return 
+    def input_cellNameEx(self, b, count, m_len, cell):
+        
+        cell.getCellByPosition(count[0], 0).String = b
+        
+                    
+        count[0] += 1
+        if count[0] >= m_len:
+            return False
+        return True
+            
+
+    ##
+    # @brief 
+    # @param self
+    # @param m_cal OOoCalcRTC
+    # @param c 列番号
+    # @param l 行番号
+    # @param sn シート名
+    # @param leng 行の範囲
     #
-   def __call__(self, config_param_name):
-        self.m_rtc.configUpdate()
+    def getCell2(self, m_cal, c, l, sn, leng):
+        
+        if m_cal.calc.sheets.hasByName(sn):
+            sheet = m_cal.calc.sheets.getByName(sn)
+
+            if leng == "":
+                CN = l + str(c)
+            else:
+                CN = l + str(c) + ':' + leng + str(c)
+            try:
+                cell = sheet.getCellRangeByName(CN)
+            except:
+                pass
+            m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
+            m_len = m_len + 1
+            return cell, sheet, m_len
+        else:
+            return None, None, None
+
+    ##
+    # @brief 
+    # @param self 
+    # @param m_cal OOoCalcRTC
+    def getCell(self, m_cal):
+        return self.getCell2(m_cal,self._num,self._row,self._sn,self._length)
+
+    
+
+    
+                    
+    ##
+    # @brief 
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param sheet シートオブジェクト
+    # @param m_cal OOoCalcRTC
+    def putOut(self, cell, sheet, m_cal):
+        m_string = CalcDataPort.DataType.String
+        m_value = CalcDataPort.DataType.Value
+
+        cell.CellBackColor = OOoRTC.RGB(int(m_cal.red[0]), int(m_cal.green[0]), int(m_cal.blue[0]))
+        
+        if self._dataType[2] == m_string:
+            if  self._length == "":
+                val = cell.String
+            else:
+                val = []
+                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
+                for i in range(0, m_len+1):
+                    val.append(cell.getCellByPosition(i, 0).String)
+        elif self._dataType[2] == m_value:
+            if self._length == "":
+                val = cell.Value
+            else:
+                val = []
+                m_len = cell.getRangeAddress().EndColumn - cell.getRangeAddress().StartColumn
+                for i in range(0, m_len+1):
+                    val.append(cell.getCellByPosition(i, 0).Value)
+                    
+        
+                
+        if self._num > 1 and self.state == True:
+            t_n = self._num -1
+            cell2, sheet2, m_len2 = self.getCell2(m_cal,t_n,self._row,self._sn,self._length)
+            cell2.CellBackColor = OOoRTC.RGB(255, 255, 255)
+            
+            
 
 
-
-
+        return val
 
 ##
-# @class mSpreadSheet_i
-# @brief サービスポートSpreadSheet
+# @class OOoCalcInPort
+# @brief
 #
-class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 
-
+class OOoCalcInPort(CalcDataPort.CalcInPort, OOoCalcPortObject):
     ##
     # @brief コンストラクタ
     # @param self 
-    # @param m_comp OOoCalcRTC
-    #
-    def __init__(self, m_comp):
-
-        self.m_comp = m_comp
-
-    ##
-    # @brief セルオブジェクト、シートオブジェクトの取得
-    # @param self 
-    # @param l 行番号
-    # @param c 列番号
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
     # @param sn シート名
-    # @return セルオブジェクト、シートオブジェクト
-    #
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        CalcDataPort.CalcInPort.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
 
-    def getCell(self, l, c, sn):
-        if self.m_comp.calc.sheets.hasByName(sn):
-            sheet = self.m_comp.calc.sheets.getByName(sn)
-            CN = l+c
-            try:
-                cell = sheet.getCellRangeByName(CN)
-                return cell, sheet
-            except:
-                pass
-        else:
-            return None
-
-
-
+    def update_cellName(self, m_cal):
+        OOoCalcPortObject.update_cellName(self, m_cal)
+    def update_cellNameSingle(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSingle(self, cell, m_len)
+    def update_cellNameSeq(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSeq(self, cell, m_len)
+    def input_cellNameEx(self, b, count, m_len, cell):
+        return OOoCalcPortObject.input_cellNameEx(self, b, count, m_len, cell)
+    def getCell(self, m_cal):
+        return OOoCalcPortObject.getCell(self, m_cal)
+    def putOut(self, cell, sheet, m_cal):
+        return OOoCalcPortObject.putOut(self, cell, sheet, m_cal)
+    def putData(self, m_cal):
+        CalcDataPort.CalcInPort.putData(self, m_cal)
+    def update_cellNameSub(self, cell, m_len):
+        CalcDataPort.CalcInPort.update_cellNameSub(self, cell, m_len)
+        
     ##
-    # @brief セルの文字列を取得
+    # @brief 
     # @param self 
-    # @param l 行番号
-    # @param c 列番号
-    # @param sn シート名
-    # @return セルの文字列
-    #
-    def get_string(self, l, c, sn):
-        guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
-        cell, sheet = self.getCell(l,c,sn)
-        if cell:
-                ans = str(cell.String)
-                del guard
-                return ans
-        del guard
-
-        return "error"
-        raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
+    # @param cell セルオブジェクト
+    # @param b データ
+    def updateIn(self, b, m_cal):
+        m_string = CalcDataPort.DataType.String
+        m_value = CalcDataPort.DataType.Value
+        
+        cell, sheet, m_len = self.getCell(m_cal)
         
 
-    ##
-    # @brief セルの値を設定
-    # @param self 
-    # @param l 行番号
-    # @param c 列番号
-    # @param sn シート名
-    # @param v 設定する値
-    ##
-    def set_value(self, l, c, sn, v):
-        guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
-        cell, sheet = self.getCell(l,c,sn)
-        if cell:
-            cell.Value = v
-            del guard
-            return
-        del guard
-        raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
-        
-
-    ##
-    # @brief 未実装
-    #
-    def get_string_range(self, l1, c1, l2, c2, sn):
-        raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
-        
-
-    ##
-    # @brief 未実装
-    #
-    def set_value_range(self, l, c, sn, v):
-        raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
-        # *** Implement me
-        # Must return: None
-
-    ##
-    # @brief セルの文字列を設定
-    # @param self 
-    # @param l 行番号
-    # @param c 列番号
-    # @param sn シート名
-    # @param v 設定する文字列
-    #
-    def set_string(self, l, c, sn, v):
-        guard = OpenRTM_aist.ScopedLock(self.m_comp._mutex)
-        cell, sheet = self.getCell(l,c,sn)
-        if cell:
-            cell.String = v
-            del guard
-            return
-        del guard
+        if cell != None:
             
-        raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
-        # *** Implement me
-        # Must return: None
+            if self._dataType[2] == m_string:
+                cell.getCellByPosition(0, 0).String = b
+            elif self._dataType[2] == m_value:
+                cell.getCellByPosition(0, 0).Value = b
+            if self.state:
+                self._num = self._num + 1
+
+
+        
+                    
+##
+# @class OOoCalcInPortSeq
+# @brief 
+class OOoCalcInPortSeq(CalcDataPort.CalcInPortSeq, OOoCalcPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        CalcDataPort.CalcInPortSeq.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+    def update_cellName(self, m_cal):
+        OOoCalcPortObject.update_cellName(self, m_cal)
+    def update_cellNameSingle(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSingle(self, cell, m_len)
+    def update_cellNameSeq(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSeq(self, cell, m_len)
+    def input_cellNameEx(self, b, count, m_len, cell):
+        return OOoCalcPortObject.input_cellNameEx(self, b, count, m_len, cell)
+    def getCell(self, m_cal):
+        return OOoCalcPortObject.getCell(self, m_cal)
+    def putOut(self, cell, sheet, m_cal):
+        return OOoCalcPortObject.putOut(self, cell, sheet, m_cal)
+    def putData(self, m_cal):
+        CalcDataPort.CalcInPortSeq.putData(self, m_cal)
+    def update_cellNameSub(self, cell, m_len):
+        CalcDataPort.CalcInPortSeq.update_cellNameSub(self, cell, m_len)
 
     ##
-    # @brief 未実装
-    #
-    def set_string_range(self, l, c, sn, v):
-        raise CORBA.NO_IMPLEMENT(0, CORBA.COMPLETED_NO)
-        # *** Implement me
-        # Must return: None
+    # @brief 
+    # @param self 
+    # @param cell セルオブジェクト
+    # @param b データ
+    def updateIn(self, b, m_cal):
+        m_string = CalcDataPort.DataType.String
+        m_value = CalcDataPort.DataType.Value
 
+        cell, sheet, m_len = self.getCell(m_cal)
 
+        if cell != None:
+            
 
+            for j in range(0, len(b)):
+                if m_len > j:
+                    if self._dataType[2] == m_string:
+                        cell.getCellByPosition(j, 0).String = b[j]
+                    elif self._dataType[2] == m_value:
+                        cell.getCellByPosition(j, 0).Value = b[j]
 
+            if self.state:
+                self._num = self._num + 1
+
+    
+
+##
+# @class OOoCalcInPortEx
+# @brief 
+class OOoCalcInPortEx(CalcDataPort.CalcInPortEx, OOoCalcPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        CalcDataPort.CalcInPortEx.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+        
+    def update_cellName(self, m_cal):
+        OOoCalcPortObject.update_cellName(self, m_cal)
+    def update_cellNameSingle(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSingle(self, cell, m_len)
+    def update_cellNameSeq(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSeq(self, cell, m_len)
+    def input_cellNameEx(self, b, count, m_len, cell):
+        return OOoCalcPortObject.input_cellNameEx(self, b, count, m_len, cell)
+    def getCell(self, m_cal):
+        return OOoCalcPortObject.getCell(self, m_cal)
+    def putOut(self, cell, sheet, m_cal):
+        return OOoCalcPortObject.putOut(self, cell, sheet, m_cal)
+    def putData(self, m_cal):
+        CalcDataPort.CalcInPortEx.putData(self, m_cal)
+    def update_cellNameSub(self, cell, m_len):
+        CalcDataPort.CalcInPortEx.update_cellNameSub(self, cell, m_len)
+    
+
+    ##
+    # @brief
+    # @param self 
+    # @param b データ
+    # @param count カウンター
+    # @param m_len 行の範囲
+    # @param cell セルオブジェクト
+    # @param d_type データタイプ
+    def putDataEx(self, b, count, m_len, cell, d_type):
+        m_string = CalcDataPort.DataType.String
+        m_value = CalcDataPort.DataType.Value
+
+        if d_type == m_string:
+            cell.getCellByPosition(count[0], 0).String = b
+        elif d_type == m_value:
+            cell.getCellByPosition(count[0], 0).Value = b
+                    
+        count[0] += 1
+        if count[0] >= m_len:
+            return False
+        return True
+
+        
+##
+# @class OOoCalcOutPort
+# @brief 
+class OOoCalcOutPort(CalcDataPort.CalcOutPort, OOoCalcPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        CalcDataPort.CalcOutPort.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+    def update_cellName(self, m_cal):
+        OOoCalcPortObject.update_cellName(self, m_cal)
+    def update_cellNameSingle(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSingle(self, cell, m_len)
+    def update_cellNameSeq(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSeq(self, cell, m_len)
+    def input_cellNameEx(self, b, count, m_len, cell):
+        return OOoCalcPortObject.input_cellNameEx(self, b, count, m_len, cell)
+    def getCell(self, m_cal):
+        return OOoCalcPortObject.getCell(self, m_cal)
+    def putOut(self, cell, sheet, m_cal):
+        return OOoCalcPortObject.putOut(self, cell, sheet, m_cal)
+    def putData(self, m_cal):
+        CalcDataPort.CalcOutPort.putData(self, m_cal)
+    def update_cellNameSub(self, cell, m_len):
+        CalcDataPort.CalcOutPort.update_cellNameSub(self, cell, m_len)
+    
+
+##
+# @class OOoCalcOutPortSeq
+# @brief 
+class OOoCalcOutPortSeq(CalcDataPort.CalcOutPortSeq, OOoCalcPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        CalcDataPort.CalcOutPortSeq.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+    def update_cellName(self, m_cal):
+        OOoCalcPortObject.update_cellName(self, m_cal)
+    def update_cellNameSingle(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSingle(self, cell, m_len)
+    def update_cellNameSeq(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSeq(self, cell, m_len)
+    def input_cellNameEx(self, b, count, m_len, cell):
+        return OOoCalcPortObject.input_cellNameEx(self, b, count, m_len, cell)
+    def getCell(self, m_cal):
+        return OOoCalcPortObject.getCell(self, m_cal)
+    def putOut(self, cell, sheet, m_cal):
+        return OOoCalcPortObject.putOut(self, cell, sheet, m_cal)
+    def putData(self, m_cal):
+        CalcDataPort.CalcOutPortSeq.putData(self, m_cal)
+    def update_cellNameSub(self, cell, m_len):
+        CalcDataPort.CalcOutPortSeq.update_cellNameSub(self, cell, m_len)
+    
+
+##
+# @class OOoCalcOutPortEx
+# @brief 
+#
+class OOoCalcOutPortEx(CalcDataPort.CalcOutPortEx, OOoCalcPortObject):
+    ##
+    # @brief コンストラクタ
+    # @param self 
+    # @param port データポート
+    # @param data データオブジェクト
+    # @param name データポート名
+    # @param row 行番号
+    # @param col 列番号
+    # @param mlen 行の範囲
+    # @param sn シート名
+    # @param mstate 列を移動するか
+    # @param port_a 接続するデータポート
+    # @param m_dataType データ型
+    # @param t_attachports 関連付けしたデータポート
+    def __init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports):
+        CalcDataPort.CalcOutPortEx.__init__(self, port, data, name, row, col, mlen, sn, mstate, port_a, m_dataType, t_attachports)
+
+    def update_cellName(self, m_cal):
+        OOoCalcPortObject.update_cellName(self, m_cal)
+    def update_cellNameSingle(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSingle(self, cell, m_len)
+    def update_cellNameSeq(self, cell, m_len):
+        OOoCalcPortObject.update_cellNameSeq(self, cell, m_len)
+    def input_cellNameEx(self, b, count, m_len, cell):
+        return OOoCalcPortObject.input_cellNameEx(self, b, count, m_len, cell)
+    def getCell(self, m_cal):
+        return OOoCalcPortObject.getCell(self, m_cal)
+    def putOut(self, cell, sheet, m_cal):
+        return OOoCalcPortObject.putOut(self, cell, sheet, m_cal)
+    def putData(self, m_cal):
+        CalcDataPort.CalcOutPortEx.putData(self, m_cal)
+    def update_cellNameSub(self, cell, m_len):
+        CalcDataPort.CalcOutPortEx.update_cellNameSub(self, cell, m_len)
+    def putDataEx(self, count, val, d_type):
+        return CalcDataPort.CalcOutPortEx.putDataEx(self, count, val, d_type)
+    
 
 
 ##
@@ -310,7 +629,7 @@ class mSpreadSheet_i (SpreadSheet__POA.mSpreadSheet):
 # @brief OpenOffice Calcを操作するためのRTCのクラス
 #
 
-class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
+class OOoCalcControl(CalcControl):
 
     ##
     # @brief コンストラクタ
@@ -318,339 +637,86 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
     # @param manager マネージャーオブジェクト
     #
   def __init__(self, manager):
-    OpenRTM_aist.DataFlowComponentBase.__init__(self, manager)
-    self.OutPorts = {}
-    self.InPorts = {}
-    self.ConfOutPorts = {}
-    self.ConfInPorts = {}
-
-    self._SpreadSheetPort = OpenRTM_aist.CorbaPort("SpreadSheet")
-    self._spreadsheet = mSpreadSheet_i(self)
+    CalcControl.__init__(self, manager)
+    
 
     try:
       self.calc = OOoCalc()
     except NotOOoCalcException:
       return
 
+    self.m_CalcInPort = OOoCalcInPort
+    self.m_CalcInPortSeq = OOoCalcInPortSeq
+    self.m_CalcInPortEx = OOoCalcInPortEx
 
-    self.conf_data_type = ["TimedFloat"]
-    self.conf_port_type = ["DataInPort"]
-    self.conf_column = [1]
-    self.conf_start_row = ["A"]
-    self.conf_end_row = ["A"]
-    self.conf_sheetname = ["sheet1"]
-    self.actionLock = [1]
-    self.red = [255]
-    self.green = [255]
-    self.blue = [0]
-    self.c_move = [1]
-    self.Attach_Port = ["None"]
+    self.m_CalcOutPort = OOoCalcOutPort
+    self.m_CalcOutPortSeq = OOoCalcOutPortSeq
+    self.m_CalcOutPortEx = OOoCalcOutPortEx
 
-    self._mutex = threading.RLock()
-    self.guard = None
     
     
     return
-  ##
-  # @brief 実行周期を設定する関数
-  # @param self 
-  # @param rate：実行周期
-  #
-
-  def mSetRate(self, rate):
-      m_ec = self.get_owned_contexts()
-      m_ec[0].set_rate(rate)
 
   ##
-  # @brief 活性化するための関数
+  # @brief セルオブジェクト、シートオブジェクトの取得
   # @param self 
-  #    
-
-  def mActivate(self):
-      m_ec = self.get_owned_contexts()
-      m_ec[0].activate_component(self._objref)
-
-  ##
-  # @brief 不活性化するための関数
-  # @param self 
-  #
-
-  def mDeactivate(self):
-      m_ec = self.get_owned_contexts()
-      m_ec[0].deactivate_component(self._objref)
-
-  ##
-  # @brief コンフィギュレーションパラメータによりアウトポートを追加する関数
-  # @param self 
-  # @param name データポート名
-  # @param data_type データ型
-  # @param row 行番号
-  # @param col 列番号
-  # @param mlen 行番号の範囲
+  # @param l 行番号
+  # @param c 列番号
   # @param sn シート名
-  # @param mstate 列を移動するか
-  # @param t_attachports 関連付けしたインポート
-
-  def addConfOutPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
-
-    sig = CalcDataPort.DataType.Single
-    sec = CalcDataPort.DataType.Sequence
-    ext = CalcDataPort.DataType.Extend
-
-    
-    
-    m_data_o, m_data_type =  CalcDataPort.GetDataSType(data_type)
-    
-
-    if m_data_o:
-        
-        
-        m_outport = OpenRTM_aist.OutPort(name, m_data_o)
-        self.addOutPort(name, m_outport)
-        
-
-        if m_data_type[1] == sig:
-            self.ConfOutPorts[name] = CalcDataPort.CalcOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-        elif m_data_type[1] == sec:
-            self.ConfOutPorts[name] = CalcDataPort.CalcOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-        elif m_data_type[1] == ext:
-            self.ConfOutPorts[name] = CalcDataPort.CalcOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-
-  ##
-  # @brief コンフィギュレーションパラメータによりインポートを追加する関数
-  # @param self 
-  # @param name データポート名
-  # @param data_type データ型
-  # @param row 行番号
-  # @param col 列番号
-  # @param mlen 行番号の範囲
-  # @param sn シート名
-  # @param mstate 列を移動するか
-  # @param t_attachports 関連付けしたアウトポート
-  
-  def addConfInPort(self, name, data_type, row, col, mlen, sn, mstate, t_attachports):
-    sig = CalcDataPort.DataType.Single
-    sec = CalcDataPort.DataType.Sequence
-    ext = CalcDataPort.DataType.Extend
-
-    
-    
-    m_data_i, m_data_type =  CalcDataPort.GetDataSType(data_type)
-    
-    if m_data_i:
-        
-        
-        m_inport = OpenRTM_aist.InPort(name, m_data_i)
-        self.addInPort(name, m_inport)
-
-        
-        
-        
-        #self.InPorts[name] = CalcDataPort.CalcPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
-        if m_data_type[1] == sig:
-            self.ConfInPorts[name] = CalcDataPort.CalcInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-        elif m_data_type[1] == sec:
-            self.ConfInPorts[name] = CalcDataPort.CalcInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-        elif m_data_type[1] == ext:
-            self.ConfInPorts[name] = CalcDataPort.CalcInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, None, m_data_type, t_attachports)
-        
-        m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
-                                          DataListener(self.ConfInPorts[name],self))
-
-  ##
-  # @brief アウトポート追加の関数
-  # @param self
-  # @param name アウトポートの名前
-  # @param m_inport 接続するインポート
-  # @param row データを書き込む行番号
-  # @param sn 接続するインポートのパス
-  # @return 追加したアウトポート
-  def mAddOutPort(self, name, m_inport, row, col, mlen, sn, mstate, t_attachports):
-
-    sig = CalcDataPort.DataType.Single
-    sec = CalcDataPort.DataType.Sequence
-    ext = CalcDataPort.DataType.Extend
-    
-    m_data_o, m_data_type =  CalcDataPort.GetDataType(m_inport[1])
-    
-
-    if m_data_o:
-        
-        m_outport = OpenRTM_aist.OutPort(name, m_data_o)
-        self.addOutPort(name, m_outport)
-        OOoRTC.ConnectPort(m_inport[1], m_outport._objref, name)
-
-        if m_data_type[1] == sig:
-            self.OutPorts[name] = CalcDataPort.CalcOutPort(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
-        elif m_data_type[1] == sec:
-            self.OutPorts[name] = CalcDataPort.CalcOutPortSeq(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
-        elif m_data_type[1] == ext:
-            self.OutPorts[name] = CalcDataPort.CalcOutPortEx(m_outport, m_data_o, name, row, col, mlen, sn, mstate, m_inport, m_data_type, t_attachports)
-        
-        return self.OutPorts[name]
-
-    return None
-                
-    
-
-            
-        
-  ##
-  # @brief インポート追加の関数
-  # @param self
-  # @param name インポートの名前
-  # @param m_inport 接続するアウトポート
-  # @param row データを書き込む行番号
-  # @param sn 書き込むシート
-  # @return 追加したインポート
-        
-  def mAddInPort(self, name, m_outport, row, col, mlen, sn, mstate, t_attachports):
-    sig = CalcDataPort.DataType.Single
-    sec = CalcDataPort.DataType.Sequence
-    ext = CalcDataPort.DataType.Extend
-    
-    m_data_i, m_data_type =  CalcDataPort.GetDataType(m_outport[1])
-    
-    if m_data_i:
-        m_inport = OpenRTM_aist.InPort(name, m_data_i)
-        self.addInPort(name, m_inport)
-        OOoRTC.ConnectPort(m_inport._objref, m_outport[1], name)
-
-        
-        
-        #self.InPorts[name] = CalcDataPort.CalcPortObject(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
-        if m_data_type[1] == sig:
-            self.InPorts[name] = CalcDataPort.CalcInPort(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
-        elif m_data_type[1] == sec:
-            self.InPorts[name] = CalcDataPort.CalcInPortSeq(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
-        elif m_data_type[1] == ext:
-            self.InPorts[name] = CalcDataPort.CalcInPortEx(m_inport, m_data_i, name, row, col, mlen, sn, mstate, m_outport, m_data_type, t_attachports)
-
-
-        
-        m_inport.addConnectorDataListener(OpenRTM_aist.ConnectorDataListenerType.ON_BUFFER_WRITE,
-                                          DataListener(self.InPorts[name], self))
-
-        return self.InPorts[name]
-
-    return None
-
-  ##
-  # @brief データポート全削除の関数
-  # @param self 
-  #
-  def mRemoveAllPort(self):
-      for n,op in self.OutPorts.items():
-          op._port.disconnect_all()
-          self.removePort(op._port)
-      self.OutPorts = {}
-
-      for n,ip in self.InPorts.items():
-          ip._port.disconnect_all()
-          self.removePort(ip._port)
-      self.InPorts = {}
-  
-  ##
-  # @brief アウトポート削除の関数
-  # @param self 
-  # @param outport 削除するアウトポート
-  #
-  
-  def mRemoveOutPort(self, outport):
-      outport._port.disconnect_all()
-      self.removePort(outport._port)
-      del self.OutPorts[outport._name]
-
-  ##
-  # @brief インポート削除の関数
-  # @param self 
-  # @param outport 削除するインポート
+  # @return セルオブジェクト、シートオブジェクト
   #
 
-  def mRemoveInPort(self, inport):
-      inport._port.disconnect_all()
-      self.removePort(inport._port)
-      del self.InPorts[inport._name]
-
-
-  ##
-  # @brief コンフィギュレーションパラメータが変更されたときに呼び出される関数
-  # @param self 
-  #
+  def getCell(self, l, c, sn):
+    if self.m_comp.calc.sheets.hasByName(sn):
+        sheet = self.m_comp.calc.sheets.getByName(sn)
+        CN = l+c
+        try:
+            cell = sheet.getCellRangeByName(CN)
+            return cell, sheet
+        except:
+            return None
+    else:
+        return None
   
-  def configUpdate(self):
-      
-      for i in range(0, 100):
-          dn = "dataport" + str(i+1)
-          
-          
-          if self._configsets.haveConfig(dn):
-              
-              self._configsets.activateConfigurationSet(dn)
-              self._configsets.update(dn)
+  def get_string(self, l, c, sn):
+    cell, sheet = self.getCell(l,c,sn)
+    if cell:
+        ans = str(cell.String)
+        return ans
+    return "error"
 
-              
-              tdt = ""
-              tmp = None
-              if self.ConfInPorts.has_key(dn):
-                  if self.conf_port_type[0] != "DataInPort":
-                      del self.ConfInPorts[dn]
-                  else:
-                      tmp = self.ConfInPorts[dn]
-                      tdt = "DataInPort"
-              if self.ConfOutPorts.has_key(dn):
-                  if self.conf_port_type[0] != "DataOutPort":
-                      del self.ConfOutPorts[dn]
-                  else:
-                      tmp = self.ConfOutPorts[dn]
-                      tdt = "DataOutPort"
+  def set_value(self, l, c, sn, v):
+    cell, sheet = self.getCell(l,c,sn)
+    if cell:
+        cell.Value = v
+  
+  def set_string(self, l, c, sn, v):
+    cell, sheet = self.getCell(l,c,sn)
+    if cell:
+        cell.String = v
 
-              data_type = ""
-              if tmp != None:
-                  profile = tmp._port.get_port_profile()
-                  props = nvlist_to_dict(profile.properties)
-                  data_type =  props['dataport.data_type']
-                  if data_type.startswith('IDL:'):
-                    data_type = data_type[4:]
-                    colon = data_type.rfind(':')
-                  if colon != -1:
-                    data_type = data_type[:colon]
+  def addActionLock(self):
+    self.calc.document.addActionLock()
 
-                    data_type = data_type.replace('RTC/','')
-              
+  def removeActionLock(self):
+    self.calc.document.removeActionLock()
 
-              if int(self.conf_column[0]) > 0 and len(self.conf_start_row[0]) > 0:
-                  c_move = True
-                  if int(self.c_move[0]) == 0:
-                      c_move = False
-                  Attach_Port = {}
-                  tA = re.split(",",self.Attach_Port[0])
-                  for k in tA:
-                       if k != "" and k != "None":
-                           Attach_Port[k] = k
-
-                  if tdt != None and data_type == self.conf_data_type[0]:# and self.conf_port_type[0] == tdt:
-                      tmp._row = self.conf_start_row[0]
-                      tmp._sn = self.conf_sheetname[0]
-                      tmp._col = self.conf_column[0]
-                      tmp._length = self.conf_end_row[0]
-                      tmp.attachports = Attach_Port 
-                      tmp.state = c_move
-                      
-
-                  else:
-                      
-                      if tmp != None:
-                          tmp._port.disconnect_all()
-                          self.removePort(tmp._port)
-
-                      
-                      
-                      if self.conf_port_type[0] == "DataInPort":
-                        self.addConfInPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
-                      elif self.conf_port_type[0] == "DataOutPort":
-                        self.addConfOutPort(dn, self.conf_data_type[0], self.conf_start_row[0], int(self.conf_column[0]), self.conf_end_row[0], self.conf_sheetname[0], c_move, Attach_Port)
-                      
+  def setCellColor(self, op):
+    t_n = op._num
+    if op.state:
+        t_n -= 1
+    if op._length == "":
+        CN = op._row + str(t_n)
+    else:
+        CN = op._row + str(t_n) + ':' + op._length + str(t_n)
+    sheetname = op._sn
+    if self.calc.sheets.hasByName(sheetname):
+        sheet = self.calc.sheets.getByName(sheetname)
+        try:
+            cell = sheet.getCellRangeByName(CN)
+            cell.CellBackColor = OOoRTC.RGB(255, 255, 255)
+        except:
+            pass
 
   ##
   # @brief 初期化処理用コールバック関数
@@ -659,30 +725,8 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   #
   
   def onInitialize(self):
+    CalcControl.onInitialize(self)
     OOoRTC.calc_comp = self
-
-    self._SpreadSheetPort.registerProvider("spreadsheet", "SpreadSheet::mSpreadSheet", self._spreadsheet)
-    self.addPort(self._SpreadSheetPort)
-
-    
-    self.addConfigurationSetListener(OpenRTM_aist.ConfigurationSetListenerType.ON_SET_CONFIG_SET, CalcConfigUpdateParam(self))
-
-    self.bindParameter("data_type", self.conf_data_type, "TimedFloat")
-    self.bindParameter("port_type", self.conf_port_type, "DataInPort")
-    self.bindParameter("column", self.conf_column, "1")
-    self.bindParameter("start_row", self.conf_start_row, "A")
-    self.bindParameter("end_row", self.conf_end_row, "A")
-    self.bindParameter("sheetname", self.conf_sheetname, "sheet1")
-    self.bindParameter("actionLock", self.actionLock, "1")
-    self.bindParameter("Red", self.red, "255")
-    self.bindParameter("Green", self.green, "255")
-    self.bindParameter("Blue", self.blue, "0")
-    self.bindParameter("c_move", self.c_move, "1")
-    self.bindParameter("Attach_Port", self.Attach_Port, "None")
-    
-    
-    
-    
     
     
     return RTC.RTC_OK
@@ -695,103 +739,11 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @return RTC::ReturnCode_t
   
   def onDeactivated(self, ec_id):
-
-    
-        
-    self.guard = OpenRTM_aist.ScopedLock(self._mutex)
-    self.calc.document.addActionLock()
-    
-    
-    for n,op in self.OutPorts.items():
-        #m_row = re.split(':',op._row)
-        t_n = op._num
-        if op.state:
-            t_n -= 1
-        if op._length == "":
-            CN = op._row + str(t_n)
-        else:
-            CN = op._row + str(t_n) + ':' + op._length + str(t_n)
-        sheetname = op._sn
-        if self.calc.sheets.hasByName(sheetname):
-            sheet = self.calc.sheets.getByName(sheetname)
-            try:
-                cell = sheet.getCellRangeByName(CN)
-                cell.CellBackColor = OOoRTC.RGB(255, 255, 255)
-            except:
-                pass
-
-    for n,op in self.ConfOutPorts.items():
-        #m_row = re.split(':',op._row)
-        t_n = op._num
-        if op.state:
-            t_n -= 1
-        if op._length == "":
-            CN = op._row + str(t_n)
-        else:
-            CN = op._row + str(t_n) + ':' + op._length + str(t_n)
-        sheetname = op._sn
-        if self.calc.sheets.hasByName(sheetname):
-            sheet = self.calc.sheets.getByName(sheetname)
-            try:
-                cell = sheet.getCellRangeByName(CN)
-                cell.CellBackColor = OOoRTC.RGB(255, 255, 255)
-            except:
-                pass
-
-    self.calc.document.removeActionLock()
-    del self.guard
-
-    for n,op in self.ConfOutPorts.items():
-        op._num = int(op._col)
-
-    for n,ip in self.ConfInPorts.items():
-        ip._num = int(ip._col)
-
-    for n,op in self.OutPorts.items():
-        op._num = int(op._col)
-
-    for n,ip in self.InPorts.items():
-        ip._num = int(ip._col)
+    CalcControl.onDeactivated(self, ec_id)
     
     return RTC.RTC_OK
 
-  ##
-  # @brief 関連付けたインポート、アウトポートの処理
-  # @param self 
-  # @param ip インポート
-  # @param OutPorts アウトポートのリスト
-  # @param InPorts インポートのリスト
-  def udAPort(self, ip, OutPorts, InPorts):
-      for n,p in ip.attachports.items():
-        if OutPorts.has_key(p) == True:
-            op = OutPorts[p]
-            if len(op.attachports) != 0:
-                Flag = True
-                for i,j in op.attachports.items():
-                    if InPorts.has_key(j) == True:
-                        #if len(self.InPorts[j].buffdata) == 0:
-                        if InPorts[j]._port.isNew() != True:
-                            Flag = False
-                    else:
-                        Flag = False
-                if Flag:
-                    self.guard = OpenRTM_aist.ScopedLock(self._mutex)
-                    for i,j in op.attachports.items():
-                        InPorts[j].putData(self)
-                        
-                    op.putData(self)
-                    del self.guard
-
-  ##
-  # @brief インポートと関連付けしたアウトポートのデータ入力後、インポートのデータ出力
-  # @param self 
-  # @param ip インポート
-  def updateAPort(self, ip):
-      self.udAPort(ip, self.OutPorts, self.InPorts)
-      self.udAPort(ip, self.ConfOutPorts, self.ConfInPorts)
-     
-      
-
+  
 
   ##
   # @brief 周期処理用コールバック関数
@@ -800,49 +752,7 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @return RTC::ReturnCode_t
   
   def onExecute(self, ec_id):
-    
-    
-    
-
-    if int(self.actionLock[0]) == 1:
-        self.guard = OpenRTM_aist.ScopedLock(self._mutex)
-        self.calc.document.addActionLock()
-        
-
-    
-
-
-
-    for n,op in self.ConfOutPorts.items():
-        if len(op.attachports) == 0:
-            op.putData(self)
-            
-    for n,ip in self.ConfInPorts.items():
-        if len(ip.attachports) == 0:
-            ip.putData(self)
-
-
-            
-    
-    for n,op in self.OutPorts.items():
-        
-        if len(op.attachports) == 0:
-            op.putData(self)
-            
-    for n,ip in self.InPorts.items():
-        if len(ip.attachports) == 0:
-            ip.putData(self)
-
-
-            
-            
-            
-        
-            
-    if int(self.actionLock[0]) == 1:
-        self.calc.document.removeActionLock()
-        del self.guard
-
+    CalcControl.onExecute(self, ec_id)
     
     
     return RTC.RTC_OK
@@ -856,32 +766,9 @@ class OOoCalcControl(OpenRTM_aist.DataFlowComponentBase):
   # @param ec_id target ExecutionContext Id
   # @return RTC::ReturnCode_t
   def on_shutdown(self, ec_id):
+      CalcControl.on_shutdown(self, ec_id)
       OOoRTC.calc_comp = None
       return RTC.RTC_OK
-
-
-  ##
-  # @brief データポートと関連付けしたセルに名前を入力
-  # @param self 
-  #
-  def update_cellName(self):
-      for n,op in self.ConfOutPorts.items():
-        op.update_cellName(self)
-            
-      for n,ip in self.ConfInPorts.items():
-        ip.update_cellName(self)
-
-
-            
-    
-      for n,op in self.OutPorts.items():
-        op.update_cellName(self)
-            
-      for n,ip in self.InPorts.items():
-        ip.update_cellName(self)
-
-
-    
 
 
 
@@ -935,45 +822,6 @@ def Set_Rate():
 
       
       
-      
-##
-# @class DataListener
-# @brief データが書き込まれたときに呼び出されるコールバック関数
-#
-
-
-class DataListener(OpenRTM_aist.ConnectorDataListenerT):
-    ##
-    # @brief コンストラクタ
-    # @param self 
-    # @param m_port データポートオブジェクト
-    # @param m_rtc OOoCalcRTC
-    #
-  def __init__(self, m_port, m_rtc):
-    self.m_port = m_port
-    self.m_rtc = m_rtc
-
-    ##
-    # @brief デストラクタ
-    # @param self 
-    #
-  def __del__(self):
-    pass
-
-    ##
-    # @brief
-    # @param self 
-    # @param info コネクタの情報
-    # @param cdrdata データ
-  def __call__(self, info, cdrdata):
-    data = OpenRTM_aist.ConnectorDataListenerT.__call__(self, info, cdrdata, self.m_port._data)
-
-    guard = OpenRTM_aist.ScopedLock(self.m_port._mutex)
-    self.m_port.buffdata.append(data.data)
-    del guard
-
-    
-    self.m_rtc.updateAPort(self.m_port)
     
 
 
@@ -1070,7 +918,7 @@ def createOOoCalcComp():
     if OOoRTC.mgr == None:
         if os.name == 'posix':
             home = expanduser("~")
-            OOoRTC.mgr = OpenRTM_aist.Manager.init([os.path.abspath(__file__), '-f', home+'/rtc.conf'])
+            OOoRTC.mgr = OpenRTM_aist.Manager.init([os.path.abspath(__file__), '-f', home+'/OOoRTC/rtc.conf'])
         elif os.name == 'nt':
             OOoRTC.mgr = OpenRTM_aist.Manager.init([os.path.abspath(__file__), '-f', '.\\rtc.conf'])
         else:
