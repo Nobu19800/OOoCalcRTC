@@ -677,7 +677,15 @@ class OOoCalcControl(CalcControl):
             return None
     else:
         return None
-  
+
+    ##
+    # @brief セルの文字列を取得
+    # @param self 
+    # @param l 行番号
+    # @param c 列番号
+    # @param sn シート名
+    # @return セルの文字列
+    #
   def get_string(self, l, c, sn):
     cell, sheet = self.getCell(l,c,sn)
     if cell:
@@ -685,22 +693,51 @@ class OOoCalcControl(CalcControl):
         return ans
     return "error"
 
+    ##
+    # @brief セルの値を設定
+    # @param self 
+    # @param l 行番号
+    # @param c 列番号
+    # @param sn シート名
+    # @param v 設定する値
+    #
   def set_value(self, l, c, sn, v):
     cell, sheet = self.getCell(l,c,sn)
     if cell:
         cell.Value = v
-  
+
+    ##
+    # @brief セルの文字列を設定
+    # @param self 
+    # @param l 行番号
+    # @param c 列番号
+    # @param sn シート名
+    # @param v 設定する文字列
+    #  
   def set_string(self, l, c, sn, v):
     cell, sheet = self.getCell(l,c,sn)
     if cell:
         cell.String = v
 
+    ##
+    # @brief 画面の更新停止
+    # @param self 
+    # 
   def addActionLock(self):
     self.calc.document.addActionLock()
 
+    ##
+    # @brief 画面の更新再開
+    # @param self 
+    # 
   def removeActionLock(self):
     self.calc.document.removeActionLock()
 
+    ##
+    # @brief データポートと関連付けしてあるセルの色を設定
+    # @param self 
+    # @param op データポートオブジェクト
+    #  
   def setCellColor(self, op):
     t_n = op._num
     if op.state:
