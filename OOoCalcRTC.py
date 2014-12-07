@@ -115,6 +115,10 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.default.red", "255",
                   "conf.default.green", "255",
                   "conf.default.blue", "0",
+                  "conf.default.stime", "0.01",
+                  "conf.default.stCell_row", "A",
+                  "conf.default.stCell_col", "1",
+                  "conf.default.stCell_sheetname", "sheet1",
                   "conf.dataport0.port_type", "DataInPort",
                   "conf.dataport0.data_type", "TimedFloat",
                   "conf.dataport0.column", "1",
@@ -369,7 +373,27 @@ class OOoCalcInPort(CalcDataPort.CalcInPort, OOoCalcPortObject):
             if self._dataType[2] == m_string:
                 cell.getCellByPosition(0, 0).String = b
             elif self._dataType[2] == m_value:
+                if self.state:
+                    pass
+                else:
+                    db = 0
+                    val = cell.getCellByPosition(0, 0).Value
+                    if self.count != 0:
+                        db = (b - val)/m_cal.stime[0]
+                    celld, sheetd, m_lend = self.getCell2(m_cal, self._num+1, self._row, self._sn, "")
+                    celld.getCellByPosition(0, 0).Value = db
+
+                    cellf, sheetf, m_lenf = self.getCell2(m_cal, self._num+2, self._row, self._sn, "")
+                    fb = b*m_cal.stime[0]
+              
+                    if self.count != 0:
+                        fb = cellf.getCellByPosition(0, 0).Value + b*m_cal.stime[0]
+
+                    cellf.getCellByPosition(0, 0).Value = fb
+                    
                 cell.getCellByPosition(0, 0).Value = b
+                self.count += 1
+                    
             if self.state:
                 self._num = self._num + 1
 
@@ -426,18 +450,40 @@ class OOoCalcInPortSeq(CalcDataPort.CalcInPortSeq, OOoCalcPortObject):
         cell, sheet, m_len = self.getCell(m_cal)
 
         if cell != None:
-            
-
-            for j in range(0, len(b)):
-                if m_len > j:
-                    if self._dataType[2] == m_string:
+            if self._dataType[2] == m_string:
+                for j in range(0, len(b)):
+                    if m_len > j:
                         cell.getCellByPosition(j, 0).String = b[j]
-                    elif self._dataType[2] == m_value:
-                        cell.getCellByPosition(j, 0).Value = b[j]
+            elif self._dataType[2] == m_value:
+                celld, sheetd, m_lend = self.getCell2(m_cal, self._num+1, self._row, self._sn, self._length)
+                for j in range(0, len(b)):
+                    if m_lend > j:
+                        if self.count != 0:
+                            val = cell.getCellByPosition(j, 0).Value
+                            celld.getCellByPosition(j, 0).Value = (b[j] - val)/m_cal.stime[0]
+                        else:
+                            celld.getCellByPosition(j, 0).Value = 0
+                cellf, sheetf, m_lenf = self.getCell2(m_cal, self._num+2, self._row, self._sn, self._length)
+                for j in range(0, len(b)):
+                    if m_lenf > j:
+                        if self.count != 0:
+                            val = cell.getCellByPosition(j, 0).Value
+                            cellf.getCellByPosition(j, 0).Value = cellf.getCellByPosition(j, 0).Value + b[j]*m_cal.stime[0]
+                        else:
+                            cellf.getCellByPosition(j, 0).Value = b[j]*m_cal.stime[0]
 
+                for j in range(0, len(b)):
+                    if m_len > j:
+                        cell.getCellByPosition(j, 0).Value = b[j]
+                self.count += 1
+                
             if self.state:
                 self._num = self._num + 1
+                
+            
 
+            
+        
     
 
 ##
@@ -780,7 +826,15 @@ class OOoCalcControl(CalcControl):
     
     return RTC.RTC_OK
 
-  
+  def setTime(self):
+    CN = self.stCell_row[0] + str(self.stCell_col[0])
+    if self.calc.sheets.hasByName(self.stCell_sheetname[0]):
+        sheet = self.calc.sheets.getByName(self.stCell_sheetname[0])
+        try:
+            cell = sheet.getCellRangeByName(CN)
+            cell.getCellByPosition(0, 0).Value = self.m_time
+        except:
+            pass
 
   ##
   # @brief 周期処理用コールバック関数
@@ -789,6 +843,8 @@ class OOoCalcControl(CalcControl):
   # @return RTC::ReturnCode_t
   
   def onExecute(self, ec_id):
+    
+    
     CalcControl.onExecute(self, ec_id)
     
     
