@@ -97,6 +97,8 @@ class ControlName:
     InPortCBName = "InPortComboBox"
     LCBName = "LowCheckBox"
     PortCBName = "PortComboBox"
+    DataTypeCBName = "DataTypeComboBox"
+    PortTypeCBName = "PortTypeComboBox"
     def __init__(self):
         pass
 
@@ -115,7 +117,7 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.default.red", "255",
                   "conf.default.green", "255",
                   "conf.default.blue", "0",
-                  "conf.default.stime", "0.01",
+                  "conf.default.stime", "0.05",
                   "conf.default.stCell_row", "A",
                   "conf.default.stCell_col", "1",
                   "conf.default.stCell_sheetname", "sheet1",
@@ -140,7 +142,7 @@ ooocalccontrol_spec = ["implementation_id", imp_id,
                   "conf.__widget__.data_type", "radio",
                   "conf.__widget__.c_move", "radio",
                   "conf.__widget__.Attach_Port", "text",
-                  "conf.__constraints__.actionLock", "(0,1)",
+                  "conf.__constraints__.actionLock", "(0,1,2)",
                   "conf.__constraints__.red", "0<=x<=255",
                   "conf.__constraints__.green", "0<=x<=255",
                   "conf.__constraints__.blue", "0<=x<=255",
@@ -455,22 +457,25 @@ class OOoCalcInPortSeq(CalcDataPort.CalcInPortSeq, OOoCalcPortObject):
                     if m_len > j:
                         cell.getCellByPosition(j, 0).String = b[j]
             elif self._dataType[2] == m_value:
-                celld, sheetd, m_lend = self.getCell2(m_cal, self._num+1, self._row, self._sn, self._length)
-                for j in range(0, len(b)):
-                    if m_lend > j:
-                        if self.count != 0:
-                            val = cell.getCellByPosition(j, 0).Value
-                            celld.getCellByPosition(j, 0).Value = (b[j] - val)/m_cal.stime[0]
-                        else:
-                            celld.getCellByPosition(j, 0).Value = 0
-                cellf, sheetf, m_lenf = self.getCell2(m_cal, self._num+2, self._row, self._sn, self._length)
-                for j in range(0, len(b)):
-                    if m_lenf > j:
-                        if self.count != 0:
-                            val = cell.getCellByPosition(j, 0).Value
-                            cellf.getCellByPosition(j, 0).Value = cellf.getCellByPosition(j, 0).Value + b[j]*m_cal.stime[0]
-                        else:
-                            cellf.getCellByPosition(j, 0).Value = b[j]*m_cal.stime[0]
+                if self.state:
+                    pass
+                else:
+                    celld, sheetd, m_lend = self.getCell2(m_cal, self._num+1, self._row, self._sn, self._length)
+                    for j in range(0, len(b)):
+                        if m_lend > j:
+                            if self.count != 0:
+                                val = cell.getCellByPosition(j, 0).Value
+                                celld.getCellByPosition(j, 0).Value = (b[j] - val)/m_cal.stime[0]
+                            else:
+                                celld.getCellByPosition(j, 0).Value = 0
+                    cellf, sheetf, m_lenf = self.getCell2(m_cal, self._num+2, self._row, self._sn, self._length)
+                    for j in range(0, len(b)):
+                        if m_lenf > j:
+                            if self.count != 0:
+                                val = cell.getCellByPosition(j, 0).Value
+                                cellf.getCellByPosition(j, 0).Value = cellf.getCellByPosition(j, 0).Value + b[j]*m_cal.stime[0]
+                            else:
+                                cellf.getCellByPosition(j, 0).Value = b[j]*m_cal.stime[0]
 
                 for j in range(0, len(b)):
                     if m_len > j:
@@ -949,7 +954,7 @@ def MyModuleInit(manager):
 # @param name データポート名
 # @param i_port 接続するデータポート
 # @param dlg_control ダイアログオブジェクト
-def CompAddOutPort(name, i_port, dlg_control):
+def CompAddOutPort(name, i_port, dlg_control, autoCon = True):
     if OOoRTC.calc_comp != None:
         tfrow_control = dlg_control.getControl( ControlName.RowFName )
         tfc_control = dlg_control.getControl( ControlName.ColTName )
@@ -970,7 +975,7 @@ def CompAddOutPort(name, i_port, dlg_control):
 
         
         
-        tcomp = OOoRTC.calc_comp.mAddOutPort(name, i_port, row, col, mlen, sn, mst, {})
+        tcomp = OOoRTC.calc_comp.mAddOutPort(name, i_port, row, col, mlen, sn, mst, {}, autoCon)
         if tcomp:
             tcomp.update_cellName(OOoRTC.calc_comp)
 
@@ -979,7 +984,7 @@ def CompAddOutPort(name, i_port, dlg_control):
 # @param name データポート名
 # @param o_port 接続するデータポート
 # @param dlg_control ダイアログオブジェクト
-def CompAddInPort(name, o_port, dlg_control):
+def CompAddInPort(name, o_port, dlg_control, autoCon = True):
     if OOoRTC.calc_comp != None:
         tfrow_control = dlg_control.getControl( ControlName.RowFName )
         tfc_control = dlg_control.getControl( ControlName.ColTName )
@@ -995,7 +1000,7 @@ def CompAddInPort(name, o_port, dlg_control):
         mst = True
         if mstate == 0:
             mst = False
-        tcomp = OOoRTC.calc_comp.mAddInPort(name, o_port, row, col, mlen, sn, mst, {})
+        tcomp = OOoRTC.calc_comp.mAddInPort(name, o_port, row, col, mlen, sn, mst, {}, autoCon)
         if tcomp:
             tcomp.update_cellName(OOoRTC.calc_comp)
 
@@ -1197,7 +1202,48 @@ class OOoCalc(Bridge):
 
 
 
+def LoadParam(count, sheet):
+    CN = 'B' + str(count)
+    cell = sheet.getCellRangeByName(CN)
+    if cell.String == '':
+        row = "A"
+    row = cell.String
 
+    CN = 'C' + str(count)
+    cell = sheet.getCellRangeByName(CN)
+    if cell.String == '':
+        col = "1"
+    col = cell.String
+
+    CN = 'D' + str(count)
+    cell = sheet.getCellRangeByName(CN)
+                            
+    mlen = cell.String
+                                
+                                
+    CN = 'E' + str(count)
+    cell = sheet.getCellRangeByName(CN)
+    if cell.String == '':
+       sn = "Sheet1"
+    sn = cell.String
+
+    CN = 'F' + str(count)
+    cell = sheet.getCellRangeByName(CN)
+    
+    if str(cell.String) == "True":
+        mstate = True
+    else:
+        mstate = False
+
+    CN = 'G' + str(count)
+    cell = sheet.getCellRangeByName(CN)
+    tmp = re.split(':',cell.String)
+    t_attachports = {}
+    for pp in tmp:
+        if pp != "":
+            t_attachports[pp] = pp
+
+    return row,col,mlen,sn,mstate,t_attachports
 
 
 ##
@@ -1228,74 +1274,45 @@ def LoadSheet():
                     m_name = re.split(':',cell.String)
                     if len(m_name) < 2:
                         return
+                    if len(m_name) == 2:
+                        for dn in CalcDataPort.DataType.DataTypeList:
+                            if m_name[1] == dn:
+                                m_name[1] = dn
+                        F_Name = m_name[1] + str(OpenRTM_aist.uuid1())
+                        row,col,mlen,sn,mstate,t_attachports = LoadParam(count, sheet)
+                        if m_name[0] == 'DataOutPort':
+                            OOoRTC.calc_comp.mAddOutPort(F_Name, [[m_name[0],m_name[1]],m_name[1]], row, col, mlen, sn, mstate, t_attachports, False)
+                        elif m_name[0] == 'DataInPort':
+                            OOoRTC.calc_comp.mAddInPort(F_Name, [[m_name[0],m_name[1]],m_name[1]], row, col, mlen, sn, mstate, t_attachports, False)
                     #MyMsgBox('',str(m_name[1]))
-                    if m_hostname == m_name[1]:
-                        pass
                     else:
+                        if m_hostname == m_name[1]:
+                            pass
+                        else:
+                            
+                            _paths = OOoRTC.GetPathList(m_name[1], OOoRTC.mgr, None)
+                            
+                            m_hostname = m_name[1]
+
                         
-                        _paths = OOoRTC.GetPathList(m_name[1], OOoRTC.mgr, None)
+                        if _paths == None:
+                            return
                         
-                        m_hostname = m_name[1]
-
-                    
-                    if _paths == None:
-                        return
-                    
-                    for p in _paths:
-                        if p[0] == m_name:
-                            F_Name = p[0][-2] + p[0][-1]
-                            profile = p[1].get_port_profile()
-                            props = nvlist_to_dict(profile.properties)
-                            CN = 'B' + str(count)
-                            cell = sheet.getCellRangeByName(CN)
-                            if cell.String == '':
-                                return
-                            row = cell.String
-
-                            CN = 'C' + str(count)
-                            cell = sheet.getCellRangeByName(CN)
-                            if cell.String == '':
-                                return
-                            col = cell.String
-
-                            CN = 'D' + str(count)
-                            cell = sheet.getCellRangeByName(CN)
-                            #if cell.String == '':
-                                #return
-                            mlen = cell.String
-                            
-                            
-                            CN = 'E' + str(count)
-                            cell = sheet.getCellRangeByName(CN)
-                            if cell.String == '':
-                                return
-                            sn = cell.String
-
-                            CN = 'F' + str(count)
-                            cell = sheet.getCellRangeByName(CN)
-                            if cell.String == '':
-                                return
-                            if str(cell.String) == "True":
-                                mstate = True
-                            else:
-                                mstate = False
-
-                            CN = 'G' + str(count)
-                            cell = sheet.getCellRangeByName(CN)
-                            tmp = re.split(':',cell.String)
-                            t_attachports = {}
-                            for pp in tmp:
-                                if pp != "":
-                                    t_attachports[pp] = pp
+                        for p in _paths:
+                            if p[0] == m_name:
+                                F_Name = p[0][-2] + p[0][-1]
+                                profile = p[1].get_port_profile()
+                                props = nvlist_to_dict(profile.properties)
                                 
-                            
-
+                                    
                                 
-                            
-                            if props['port.port_type'] == 'DataInPort':
-                                OOoRTC.calc_comp.mAddOutPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
-                            elif props['port.port_type'] == 'DataOutPort':
-                                OOoRTC.calc_comp.mAddInPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
+                                row,col,mlen,sn,mstate,t_attachports = LoadParam(count, sheet)
+                                    
+                                
+                                if props['port.port_type'] == 'DataInPort':
+                                    OOoRTC.calc_comp.mAddOutPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
+                                elif props['port.port_type'] == 'DataOutPort':
+                                    OOoRTC.calc_comp.mAddInPort(F_Name, p, row, col, mlen, sn, mstate, t_attachports)
                 except:
                     pass
                 count = count + 1
@@ -1425,6 +1442,14 @@ def UpdateTree(dlg_control, m_port):
     
     scb_control = dlg_control.getControl( ControlName.SheetCBName )
     scb_control.setText(m_port._sn)
+
+    dtcb_control = dlg_control.getControl( ControlName.DataTypeCBName )
+    ptcb_control = dlg_control.getControl( ControlName.PortTypeCBName )
+    if len(m_port._port_a[0]) == 2:
+        ptcb_control.setText(m_port._port_a[0][0])
+        dtcb_control.setText(m_port._port_a[1])
+    else:
+        dtcb_control.setText("")
     
     tfrow_control = dlg_control.getControl( ControlName.RowFName )
     tfrow_control.setText(m_port._row)
@@ -1540,6 +1565,7 @@ class PortListListener(unohelper.Base, XTextListener):
         UpdateInPortList(self.dlg_control)
         if OOoRTC.calc_comp:
             ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
+            
             
             
             if OOoRTC.calc_comp.InPorts.has_key(str(ptlist_control.Text)) == True:
@@ -1763,6 +1789,28 @@ class CreatePortListener( unohelper.Base, XActionListener):
                 SetPortParam(OOoRTC.calc_comp.OutPorts[str(ptlist_control.Text)], self.dlg_control)
                 return
 
+        dtcb_control = self.dlg_control.getControl( ControlName.DataTypeCBName )
+        dt = str(dtcb_control.Text)
+        if dt != "":
+            F_Name = dt + str(OpenRTM_aist.uuid1())
+            ptcb_control = self.dlg_control.getControl( ControlName.PortTypeCBName )
+            pt = str(ptcb_control.Text)
+
+            for d in CalcDataPort.DataType.DataTypeList:
+                if dt == d:
+                    dt = d
+            if pt == "DataOutPort":
+                CompAddOutPort(F_Name, [[pt,dt],dt], self.dlg_control, False)
+                MyMsgBox('',OOoRTC.SetCoding(dt+"型のOutPortを作成しました。",'utf-8'))
+            else:
+                CompAddInPort(F_Name, [[pt,dt],dt], self.dlg_control, False)
+                MyMsgBox('',OOoRTC.SetCoding(dt+"型のInPortを作成しました。",'utf-8'))
+
+            UpdateSaveSheet()
+            UpdateInPortList(self.dlg_control)
+            UpdateDataPortList(self.dlg_control)
+            return
+
         
         t_comp, nd = OOoRTC.JudgePort(objectTree, self._paths)
         if t_comp:
@@ -1777,6 +1825,7 @@ class CreatePortListener( unohelper.Base, XActionListener):
                     SetPortParam(i, self.dlg_control)
                     
                     return
+
             
             
                                 
@@ -1863,7 +1912,10 @@ class TreeSelectListener( unohelper.Base, XSelectionChangeListener):
 
         
         ptlist_control = self.dlg_control.getControl( ControlName.PortCBName )
-        ptlist_control.Text = "" 
+        ptlist_control.Text = ""
+
+        dtcb_control = self.dlg_control.getControl( ControlName.DataTypeCBName )
+        dtcb_control.setText("")
             
         if t_comp:
             for n,o in OOoRTC.calc_comp.OutPorts.items():
@@ -2076,9 +2128,21 @@ def SetDialog():
     for n in names:
         if n != OOoRTC.SetCoding('保存用','utf-8'):
             st_control.addItem (n, st_control.ItemCount)
-    
-    
+
     st_control.Text = names[0]
+
+
+    dtcb_control = dlg_control.getControl( ControlName.DataTypeCBName )
+    dtcb_control.addItem ("", dtcb_control.ItemCount)
+    for n in CalcDataPort.DataType.DataTypeList:
+        dtcb_control.addItem (n, dtcb_control.ItemCount)
+    
+    ptcb_control = dlg_control.getControl( ControlName.PortTypeCBName )
+    ptcb_control.addItem ("DataInPort", ptcb_control.ItemCount)
+    ptcb_control.addItem ("DataOutPort", ptcb_control.ItemCount)
+    ptcb_control.setText('DataInPort')
+    
+    
 
     
     lcb_control = dlg_control.getControl( ControlName.LCBName )
