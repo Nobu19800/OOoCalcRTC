@@ -371,7 +371,8 @@ class OOoCalcInPort(CalcDataPort.CalcInPort, OOoCalcPortObject):
         
 
         if cell != None:
-            
+            cell.getCellByPosition(0, 0).String = b
+            """
             if self._dataType[2] == m_string:
                 cell.getCellByPosition(0, 0).String = b
             elif self._dataType[2] == m_value:
@@ -397,7 +398,7 @@ class OOoCalcInPort(CalcDataPort.CalcInPort, OOoCalcPortObject):
                 self.count += 1
                     
             if self.state:
-                self._num = self._num + 1
+                self._num = self._num + 1"""
 
 
         
@@ -452,7 +453,10 @@ class OOoCalcInPortSeq(CalcDataPort.CalcInPortSeq, OOoCalcPortObject):
         cell, sheet, m_len = self.getCell(m_cal)
 
         if cell != None:
-            if self._dataType[2] == m_string:
+            for j in range(0, len(b)):
+                if m_len > j:
+                    cell.getCellByPosition(j, 0).String = b[j]
+            """if self._dataType[2] == m_string:
                 for j in range(0, len(b)):
                     if m_len > j:
                         cell.getCellByPosition(j, 0).String = b[j]
@@ -483,7 +487,7 @@ class OOoCalcInPortSeq(CalcDataPort.CalcInPortSeq, OOoCalcPortObject):
                 self.count += 1
                 
             if self.state:
-                self._num = self._num + 1
+                self._num = self._num + 1"""
                 
             
 
